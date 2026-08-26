@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------
+   La lista de Benjamín — tokens tomados de la invitación impresa.
+   No inventar colores nuevos: si hace falta uno, derivarlo de estos.
+   --------------------------------------------------------------- */
+@theme {
+  /* superficies */
+  --color-crema: #F6EEE1;
+  --color-papel: #FDFAF4;
+  --color-linea: #E9DCC6;
+  --color-linea-fuerte: #E0D2BC;
+
+  /* tinta */
+  --color-tinta: #5A4A33;
+  --color-tinta-2: #6B5738;
+  --color-tinta-3: #7C6647;
+  --color-tinta-4: #8A7355;
+  --color-tinta-5: #9C8563;
+  --color-tinta-6: #A08A6B;
+
+  /* azul polvo — acción en el producto, acento en la invitación */
+  --color-azul: #4F6E85;
+  --color-azul-medio: #6E8FA6;
+  --color-azul-lazo: #A8C4DC;
+  --color-azul-200: #C6D6E1;
+  --color-azul-50: #E7EEF4;
+
+  /* salvia — "se puede escoger varias veces" */
+  --color-salvia: #5C7350;
+  --color-hoja: #A8B894;
+  --color-hoja-oscura: #8FA47C;
+  --color-salvia-100: #E4EAD8;
+  --color-salvia-linea: #C6D2B4;
+
+  /* pardo — "entre varios", y el apellido */
+  --color-pardo: #8A6A44;
+  --color-oso: #E0C6A0;
+  --color-oso-oscuro: #D4B48C;
+  --color-oso-claro: #F5E9D6;
+  --color-madera: #C9A87A;
+  --color-pardo-100: #F0E2CC;
+  --color-pardo-linea: #DFCBA9;
+
+  /* gris cálido — reservado */
+  --color-gris-fondo: #EDE4D5;
+  --color-gris-texto: #8C7F6C;
+
+  --font-script: var(--fuente-script), cursive;
+  --font-serif: var(--fuente-serif), Georgia, serif;
+  --font-ui: var(--fuente-ui), "Avenir Next", system-ui, sans-serif;
+}
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  background: var(--color-crema);
+  color: var(--color-tinta-2);
+  font-family: var(--font-serif);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Versalitas espaciadas: es lo que le da el aire de invitación impresa. */
+.caps {
+  font-family: var(--font-serif);
+  text-transform: uppercase;
+  letter-spacing: 0.20em;
+  font-weight: 600;
+  color: var(--color-tinta-5);
+}
+
+.script { font-family: var(--font-script); color: var(--color-tinta-3); line-height: 1.22; }
+
+/* Panel translúcido de la invitación */
+.panel {
+  background: rgb(253 250 244 / 0.62);
+  border: 1px solid var(--color-linea);
+  border-radius: 26px;
+}
+
+:focus-visible { outline: 2px solid var(--color-azul); outline-offset: 3px; border-radius: 4px; }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .01ms !important; transition-duration: .01ms !important; }
+}
