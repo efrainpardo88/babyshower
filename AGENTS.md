@@ -13,13 +13,14 @@ Cualquier decisión de alcance se toma contra el 4 de septiembre, no contra el 1
 
 | Archivo | Qué tiene |
 |---|---|
-| `docs/decisiones.md` | **Léelo antes de cambiar algo.** Por qué el proyecto es así, y qué NO hacer |
-| `docs/plan.md` | Calendario, plan B de recortes, riesgos y pendientes |
+| `.claude/docs/decisiones.md` | **Léelo antes de cambiar algo.** Por qué el proyecto es así, y qué NO hacer |
+| `.claude/docs/plan.md` | Calendario, plan B de recortes, riesgos y pendientes |
 | `src/lib/db/seed.ts` | Los 26 regalos con modo, cupos y precios — fuente de verdad del contenido |
 | `src/lib/db/schema.ts` | Esquema; los comentarios explican la restricción de concurrencia |
 | `src/app/globals.css` | Todos los colores y tipografías bajo `@theme` |
 | `src/components/ilustraciones.tsx` | SVG de guía; se reemplazan por las acuarelas |
-| `docs/diseno/*.png` | **Las 10 pantallas aprobadas.** Míralas antes de construir |
+| `.claude/docs/diseno/*.png` | **Las pantallas aprobadas.** Míralas antes de construir |
+| `.claude/docs/plan-landing.md` | Plan para llevar `/` al diseño final. Léelo antes de tocar la landing |
 
 ## El problema que resuelve
 
@@ -43,7 +44,7 @@ y cómo contactarlos; el recaudo lo resuelven ellos por fuera. No integrar pasar
 en la ficha y en el panel de selección. `precioMin`/`precioMax` son públicos.
 
 Es un **cambio del 25 de agosto** sobre la decisión original de mostrar solo `$ · $$ · $$$`
-— ver `docs/decisiones.md`. `nivelPrecio` se queda, pero degradado: sirve de respaldo
+— ver `.claude/docs/decisiones.md`. `nivelPrecio` se queda, pero degradado: sirve de respaldo
 cuando un regalo no tiene rango cargado, y para agrupar en el panel.
 El rango siempre se arma con `formatearRango()` de `src/lib/precio.ts`; no formatear cifras a mano.
 
@@ -62,19 +63,25 @@ Dos invitados pueden hacer clic en el mismo regalo al mismo segundo. La garantí
 4. El índice único parcial `reservas_unico_activo_idx` es la red de seguridad
 
 Cuando la reserva falla por conflicto, **no mostrar un error genérico**: se confirma lo que sí
-quedó y se dice con claridad qué se cayó. Está diseñado — ver `docs/diseno/Reserva.png`.
+quedó y se dice con claridad qué se cayó. Está diseñado — ver `.claude/docs/diseno/Reserva.png`.
 
 ## Diseño
 
-**El diseño está aprobado y está en el repo como imágenes: `docs/diseno/`.**
-Ábrelas — son la especificación visual. Empieza por `docs/diseno/README.md`.
+**El diseño está aprobado y está en el repo como imágenes: `.claude/docs/diseno/`.**
+Ábrelas — son la especificación visual. Empieza por `.claude/docs/diseno/README.md`.
+
+**Para la landing, la referencia es `.claude/docs/diseno/LandingDesktopNew.png`** — la versión final.
+`LandingDesktop.png` era preliminar y ya no se construye contra ella. El plan está en
+`.claude/docs/plan-landing.md`.
 
 El canvas en vivo está en https://claude.ai/code/artifact/bc37c50b-c0dd-473e-8396-2cd30068e9f5
 pero **no lo leas con una herramienta**: son ~2 MB de código del editor. Usa las imágenes.
 
 Viene de la invitación impresa que ya se envió a los invitados. No inventar una dirección nueva.
 
-- **Tipografías**: Great Vibes (solo nombres), Cormorant Garamond (titulares y versalitas), Karla (UI y datos)
+- **Tipografías**: The Nautigal («Baby Benjamín»), Style Script («Baby Shower»), Cormorant Garamond (titulares y versalitas), Karla (UI y datos)
+- Los dos scripts son distintos **a propósito**, uno por cada texto grande de la invitación. Se declaran en `layout.tsx` y se usan con las clases `.nombre` y `.evento`. Great Vibes salió del proyecto.
+- Las fuentes las **autoaloja Next** (`next/font/google`): se descargan en el build y se sirven desde el mismo dominio. No hay peticiones a Google desde el navegador; no agregar `<link>` a `fonts.googleapis.com`.
 - **Las versalitas espaciadas** (`.caps`) son lo que le da el aire de invitación impresa. Usarlas para toda etiqueta.
 - **Colores**: definidos en `src/app/globals.css` bajo `@theme`. **No inventar colores nuevos**; derivar de los que hay.
 - **El color codifica estado**: azul = disponible/acción · salvia = se puede escoger varias veces · pardo = entre varios · gris cálido = reservado
@@ -83,13 +90,19 @@ Viene de la invitación impresa que ya se envió a los invitados. No inventar un
 
 ### Ilustraciones — importante
 
-`src/components/ilustraciones.tsx` tiene SVG planos que son **guía de posición y tamaño**, no el arte final.
-Efraín va a entregar PNG de acuarela (los mismos de la invitación). Cuando lleguen, cada SVG se
-reemplaza por su `<Image>` respetando la caja y la posición. No rediseñar el layout al hacerlo.
+Las acuarelas de la landing **ya llegaron**: están en `public/img` como `ln-<banda>-<lado>.png`
+(cuatro bandas, dos lados). Cada PNG es una **columna decorativa completa** — trae su propio
+follaje, nubes y estrellas horneados. Por eso los SVG `Rama`, `Nube`, `Estrella`, `Oso`,
+`Globo` y `Conejo` no se recolocan: **se eliminan**. Si se dejan, el follaje queda duplicado.
+
+`Corazon` y `Divisor` se quedan: siguen apareciendo en el diseño final.
+
+El mapeo exacto de qué PNG va en cada posición está en `.claude/docs/diseno/images-guide.png`, y qué
+SVG se borra en `.claude/docs/diseno/remove-svg.png`. Ambos explicados en `.claude/docs/plan-landing.md`.
 
 ### Orden de la landing (decidido, no reordenar)
 
-1. Invitación — «Bebé Benjamín» / «Te invito a mi» / «Baby Shower» + cuenta regresiva
+1. Invitación — «Baby Benjamín» / «Te invita a su» / «Baby Shower» + cuenta regresiva
 2. Detalles del evento
 3. Mesa de regalos
 4. Galería (fotos de la revelación de género)
@@ -136,7 +149,7 @@ npm run dev
 
 ## Lo que NO se debe hacer
 
-Cada una de estas fue una decisión, no un olvido. Ver `docs/decisiones.md`.
+Cada una de estas fue una decisión, no un olvido. Ver `.claude/docs/decisiones.md`.
 
 - **No integrar pasarelas de pago.** La página nunca maneja dinero.
 - **No mostrar precios sueltos ni inventados.** El rango sale de `precioMin`/`precioMax` vía `formatearRango()`; sin rango se cae a `nivelPrecio`.
@@ -145,18 +158,20 @@ Cada una de estas fue una decisión, no un olvido. Ver `docs/decisiones.md`.
 - **No reordenar las secciones de la landing.** El evento va antes que los regalos.
 - **No cambiar el oso por otro animal.** Es el apellido de la familia.
 - **No validar la concurrencia solo en el cliente.** La garantía la da Postgres.
-- **No mostrar un error genérico** cuando una reserva choca. Está diseñado, ver `docs/diseno/Reserva.png`.
+- **No mostrar un error genérico** cuando una reserva choca. Está diseñado, ver `.claude/docs/diseno/Reserva.png`.
 
 ## Estado actual
 
 - [x] Scaffold, tokens de diseño, esquema de datos
-- [x] Landing (`/`) completa
-- [ ] `/lista` con estados de tarjeta y panel de selección
-- [ ] Lógica de reserva con transacción
-- [ ] `/regalo/[slug]` y `/reserva/[token]`
+- [x] Landing (`/`) construida contra el diseño final (`LandingDesktopNew.png`)
+- [x] `/lista` con filtros, grilla y panel de selección (`localStorage`)
+- [x] Lógica de reserva con transacción, probada bajo concurrencia (`npm run prueba:reservas`)
+- [x] `/reserva` (formulario) y `/reserva/[token]` (comprobante, con cancelar)
+- [ ] `/regalo/[slug]`
 - [ ] Auth con Google y panel de administración
-- [x] Los 26 regalos escritos en `seed.ts` (falta correrlo contra Neon)
-- [ ] Reemplazar SVG por las acuarelas
+- [x] Base en Neon viva: proyecto `frosty-haze-68776446`, rama `production`, base `babyshower`
+- [x] Los 26 regalos cargados con `db:seed` (idempotente: se puede repetir)
+- [x] Acuarelas de la landing conectadas; SVG viejos eliminados
 
 ## Convenciones
 
@@ -168,3 +183,13 @@ Cada una de estas fue una decisión, no un olvido. Ver `docs/decisiones.md`.
   - Nada por debajo de 44px es tocable.
 - Sin modo oscuro. Es una invitación impresa, tiene un solo modo.
 - `node_modules` y `.env.local` nunca se suben.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

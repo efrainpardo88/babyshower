@@ -27,7 +27,7 @@ export type RegaloParaEstado = {
 
 /**
  * Los cinco estados que puede tener un regalo en el servidor.
- * El sexto de `docs/diseno/EstadosTarjeta.png` («En tu selección») no está aquí:
+ * El sexto de `.claude/docs/diseno/EstadosTarjeta.png` («En tu selección») no está aquí:
  * es del navegador de cada invitado, se superpone y no cambia lo que otros ven.
  */
 export type EstadoRegalo =

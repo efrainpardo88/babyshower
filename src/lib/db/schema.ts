@@ -41,7 +41,7 @@ export const regalos = pgTable(
     linksCompra: text("links_compra").notNull().default("[]"),
 
     /**
-     * PÚBLICO desde el 25/08/2026 (ver docs/decisiones.md): el invitado ve
+     * PÚBLICO desde el 25/08/2026 (ver .claude/docs/decisiones.md): el invitado ve
      * «Entre $20.000 y $80.000» en la tarjeta y en la ficha. En COP, sin decimales.
      * Siguen siendo opcionales: un regalo puede existir sin rango mientras el admin
      * lo averigua, y ahí la tarjeta cae a `nivelPrecio`. Si hay uno, deben ir los dos.
@@ -81,6 +81,15 @@ export const reservas = pgTable(
     telefono: text("telefono"),
     mensaje: text("mensaje"),
 
+    /**
+     * Agrupa las reservas de un mismo envío del formulario.
+     *
+     * El invitado recibe UN enlace para toda su selección, no uno por regalo
+     * — ver .claude/docs/diseno/Reserva.png. `token` sigue siendo por fila
+     * porque hace falta para cancelar un regalo suelto sin tocar los demás.
+     */
+    lote: uuid("lote").notNull().defaultRandom(),
+
     cantidad: integer("cantidad").notNull().default(1),
     estado: estadoReserva("estado").notNull().default("activa"),
     /**
@@ -95,6 +104,7 @@ export const reservas = pgTable(
   (t) => [
     index("reservas_regalo_idx").on(t.regaloId),
     index("reservas_email_idx").on(t.email),
+    index("reservas_lote_idx").on(t.lote),
     /**
      * LA restricción del proyecto.
      * Un regalo de modo 'unico' admite UNA sola reserva activa. La garantía la da

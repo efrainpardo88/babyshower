@@ -32,17 +32,17 @@ export function CuentaRegresiva({ fechaIso }: { fechaIso: string }) {
   }, [hasta]);
 
   return (
-    <div className="panel mt-2 flex w-full flex-col items-center gap-4 px-6 py-6 sm:w-auto sm:px-9">
-      <span className="caps text-[11px] sm:text-[13px]">Faltan para el gran día</span>
-      <div className="flex items-center gap-5 sm:gap-8">
+    <div className="mt-2 flex w-full flex-col items-center gap-4 rounded-[26px] border border-linea px-6 py-6 sm:w-auto sm:px-[clamp(36px,2.6vw,52px)]">
+      <span className="caps text-[11px] sm:text-[clamp(13px,0.93vw,18px)]">Faltan para el gran día</span>
+      <div className="flex items-center gap-5 sm:gap-[clamp(32px,2.3vw,48px)]">
         {UNIDADES.map(([clave, etiqueta], i) => (
-          <div key={clave} className="flex items-center gap-5 sm:gap-8">
+          <div key={clave} className="flex items-center gap-5 sm:gap-[clamp(32px,2.3vw,48px)]">
             {i > 0 && <div className="h-9 w-px bg-linea-fuerte" aria-hidden="true" />}
             <div className="flex flex-col items-center gap-1">
-              <span className="font-serif text-[30px] leading-none font-semibold tabular-nums text-tinta-2 sm:text-[38px]">
+              <span className="font-serif text-[30px] leading-none font-semibold tabular-nums lining-nums text-tinta-2 sm:text-[clamp(38px,2.71vw,53px)]">
                 {t ? String(t[clave]).padStart(2, "0") : "--"}
               </span>
-              <span className="caps text-[9px] sm:text-[10px]">{etiqueta}</span>
+              <span className="caps text-[9px] sm:text-[clamp(10px,0.71vw,14px)]">{etiqueta}</span>
             </div>
           </div>
         ))}

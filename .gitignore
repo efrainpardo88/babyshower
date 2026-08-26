@@ -40,3 +40,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .env*.local
+
+# Instalación de skills de terceros. La copia que usamos vive en .claude/skills;
+# esta carpeta es el origen del instalador y duplicaría el mismo contenido.
+.agents/

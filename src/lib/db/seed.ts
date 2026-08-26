@@ -5,7 +5,7 @@
  *
  *   npm run db:seed
  *
- * Reglas que hay detrás de estos datos (ver docs/decisiones.md):
+ * Reglas que hay detrás de estos datos (ver .claude/docs/decisiones.md):
  *  · Todo ítem lleva talla o cantidad EXPLÍCITA en el nombre. Eso evita los repetidos.
  *  · Los pañales tienen cupos repartidos a propósito: casi nadie debe regalar talla RN,
  *    porque se usa unas tres semanas. El grueso va a tallas 1 y 2.
@@ -15,9 +15,9 @@
  *  · `nivelPrecio` quedó de respaldo (regalos sin rango) y para agrupar en el panel.
  *    `$` hasta 80.000 · `$$` hasta 250.000 · `$$$` de ahí para arriba (COP).
  */
-import { config } from "dotenv";
-config({ path: ".env.local" });
-
+// El .env.local NO se carga aquí: los `import` se elevan por encima de cualquier
+// llamada a dotenv, así que `./index` se cargaría antes y reventaría por falta de
+// DATABASE_URL. Lo carga Node con `--env-file`, desde el script `db:seed`.
 import { db } from "./index";
 import { categorias, regalos } from "./schema";
 
@@ -95,8 +95,17 @@ const slugify = (s: string) =>
 
 async function main() {
   console.log("Sembrando categorías…");
-  const cats = await db.insert(categorias).values([...CATEGORIAS]).onConflictDoNothing().returning();
+  await db.insert(categorias).values([...CATEGORIAS]).onConflictDoNothing();
+
+  // El mapa slug→id se lee DESPUÉS de insertar, con un SELECT aparte. No se puede
+  // usar el `returning()` del insert: con `onConflictDoNothing`, las filas que ya
+  // existían no se devuelven, así que en la segunda corrida el mapa venía vacío y
+  // los regalos entraban sin `categoria_id`. El seed tiene que poder repetirse.
+  const cats = await db.select().from(categorias);
   const porSlug = new Map(cats.map((c) => [c.slug, c.id]));
+  for (const c of CATEGORIAS) {
+    if (!porSlug.has(c.slug)) throw new Error(`Falta la categoría ${c.slug}`);
+  }
 
   let orden = 0;
   const filas = Object.entries(REGALOS).flatMap(([catSlug, items]) =>

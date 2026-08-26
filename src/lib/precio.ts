@@ -1,7 +1,7 @@
 /**
  * Precios para el invitado.
  *
- * Desde el 25/08/2026 mostramos el rango real en pesos — ver docs/decisiones.md.
+ * Desde el 25/08/2026 mostramos el rango real en pesos — ver .claude/docs/decisiones.md.
  * Toda cifra que vea el invitado pasa por aquí: si se formatea a mano en un
  * componente, tarde o temprano un renglón queda con separador distinto.
  *

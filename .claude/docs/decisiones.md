@@ -35,7 +35,7 @@ en ninguna parte — la página sigue sin manejar dinero.
 rango cargado, y sirve para agrupar en el panel. El corte sigue siendo
 `$` hasta 80.000 · `$$` hasta 250.000 · `$$$` de ahí para arriba (COP).
 
-*Pendiente visual:* las pantallas aprobadas (`docs/diseno/*.png`) todavía dibujan `$ $$ $$$`
+*Pendiente visual:* las pantallas aprobadas (`.claude/docs/diseno/*.png`) todavía dibujan `$ $$ $$$`
 en la tarjeta. El código diverge del PNG **a propósito** en esa línea y solo en esa línea.
 
 ---
@@ -85,6 +85,30 @@ El invitado acumula regalos en un panel lateral (`localStorage`) y al final llen
 
 «Pardo» es el apellido de la familia. El oso no es decoración genérica de baby shower:
 es el emblema. No cambiarlo por otro animal.
+
+---
+
+### La landing tiene una versión final que reemplaza a la preliminar
+
+**Decidido el 25 de agosto de 2026 — Efraín.**
+
+`LandingDesktop.png` era un diseño preliminar. La versión final es
+**`LandingDesktopNew.png`** y es contra esa que se construye `/`.
+
+Trae tres cosas, no una:
+
+1. **Las acuarelas reales** en vez de los SVG planos. Están en `public/img` y cada archivo
+   es una columna decorativa completa, con su follaje y sus estrellas ya horneados.
+2. **Otro encabezado**: «Baby Benjamín» arriba y grande, «Te invita a su» en versalitas, y
+   «Baby Shower» debajo. El nombre encabeza; el evento va después.
+3. **La voz se mantiene en el bebé** («Te invita a su»), pero el subtítulo habla en plural de
+   los papás («¡Estamos emocionados de celebrar la llegada de nuestro pequeño!»).
+
+*Qué NO cambió:* el orden de las secciones, el enlace a WhatsApp para confirmar, la
+dirección de la invitación impresa y el oso como marca.
+
+*Sin resolver:* no hay diseño móvil nuevo. `LandingMovil.png` sigue siendo el preliminar.
+El plan y los riesgos están en `.claude/docs/plan-landing.md`.
 
 ---
 

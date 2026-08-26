@@ -5,8 +5,10 @@
    No inventar colores nuevos: si hace falta uno, derivarlo de estos.
    --------------------------------------------------------------- */
 @theme {
-  /* superficies */
-  --color-crema: #F6EEE1;
+  /* superficies
+     El crema salió de LandingDesktopNew.png (el fondo real del diseño final).
+     Es más claro y cálido que el swatch de Sistema.png, que quedó superado. */
+  --color-crema: #FBF1E8;
   --color-papel: #FDFAF4;
   --color-linea: #E9DCC6;
   --color-linea-fuerte: #E0D2BC;
@@ -46,7 +48,8 @@
   --color-gris-fondo: #EDE4D5;
   --color-gris-texto: #8C7F6C;
 
-  --font-script: var(--fuente-script), cursive;
+  --font-nombre: var(--fuente-nombre), cursive;
+  --font-evento: var(--fuente-evento), cursive;
   --font-serif: var(--fuente-serif), Georgia, serif;
   --font-ui: var(--fuente-ui), "Avenir Next", system-ui, sans-serif;
 }
@@ -60,23 +63,37 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* Versalitas espaciadas: es lo que le da el aire de invitación impresa. */
+/* Versalitas espaciadas: es lo que le da el aire de invitación impresa.
+   OJO: esta clase FIJA el color. Tiene la misma especificidad que las utilidades
+   de Tailwind y se declara después, así que gana sobre cualquier `text-*`. Para
+   pintar una versalita de otro color hay que forzarlo con `!`, por ejemplo
+   `!text-papel` cuando va sobre azul. Sin eso el texto queda ilegible. */
 .caps {
   font-family: var(--font-serif);
   text-transform: uppercase;
   letter-spacing: 0.20em;
+  font-variant-numeric: lining-nums;
   font-weight: 600;
   color: var(--color-tinta-5);
 }
 
-.script { font-family: var(--font-script); color: var(--color-tinta-3); line-height: 1.22; }
+/* Los dos textos grandes de la invitación. Comparten color y interlínea; cambia
+   la fuente: el nombre en The Nautigal, el evento en Style Script. */
+.nombre,
+.evento { color: var(--color-tinta-3); line-height: 1.22; }
+.nombre { font-family: var(--font-nombre); font-weight: 700; }
 
-/* Panel translúcido de la invitación */
-.panel {
-  background: rgb(253 250 244 / 0.62);
-  border: 1px solid var(--color-linea);
-  border-radius: 26px;
+/* Style Script solo existe en 400: no tiene negrita. Sin esto, un `font-bold`
+   suelto hace que el navegador invente una engrosando los trazos, y en una
+   caligrafía eso se ve deforme. Preferimos que no pase nada a que se vea mal.
+   The Nautigal sí tiene 700 real, por eso no lleva esta regla. */
+.evento {
+  font-family: var(--font-evento);
+  font-synthesis-weight: none;
 }
+
+/* El panel translúcido se eliminó el 26/08/2026: el fondo ahora es plano y las
+   bandas alternan crema y blanco. Ver el componente `Fondo` en page.tsx. */
 
 :focus-visible { outline: 2px solid var(--color-azul); outline-offset: 3px; border-radius: 4px; }
 

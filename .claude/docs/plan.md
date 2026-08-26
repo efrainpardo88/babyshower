@@ -51,13 +51,20 @@ editar regalos y ver quién reservó. Ese es el mínimo que resuelve el problema
 
 ## Pendientes de Efraín
 
-- [ ] Neon: crear proyecto y poner `DATABASE_URL` en `.env.local`
+- [x] Neon: proyecto creado, base `babyshower`, `DATABASE_URL` en `.env.local`, tablas y 26 regalos cargados
 - [ ] Google OAuth: Client ID y Secret (Google Cloud Console)
 - [ ] Número de WhatsApp para el botón de confirmar asistencia
 - [ ] Correos de Google con acceso al panel
-- [ ] **Assets de acuarela** — los PNG de la invitación, fondo transparente, ~2x
+- [x] **Assets de acuarela de la landing** — entregados en `public/img` (`ln-1-l` … `ln-4-r`)
+- [ ] **Diseño móvil de la landing final** — `LandingMovil.png` sigue siendo el preliminar
+- [x] Decididas las preguntas abiertas de la landing (orden del menú, fecha límite, móvil)
 - [ ] Fotos de la revelación de género para la galería (4–6)
 - [ ] Fotos de producto de los 26 regalos (es la tarea más larga)
+
+## Landing final
+
+El diseño de la landing se rehízo: `LandingDesktopNew.png` reemplaza al preliminar.
+El plan paso a paso, los ocho PNG y los riesgos están en **`.claude/docs/plan-landing.md`**.
 
 ## Referencias
 

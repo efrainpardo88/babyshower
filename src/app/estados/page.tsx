@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { TarjetaRegalo, type RegaloTarjeta } from "@/components/tarjeta-regalo";
 
 /**
- * Banco de pruebas de la tarjeta — para comparar contra `docs/diseno/EstadosTarjeta.png`
+ * Banco de pruebas de la tarjeta — para comparar contra `.claude/docs/diseno/EstadosTarjeta.png`
  * con la página al lado del PNG. **Solo en desarrollo**: en producción no existe.
  *
  * No es una pantalla del producto y no va en el menú. Se puede borrar el día que
@@ -169,7 +169,7 @@ export default function BancoDeEstados() {
         <p className="caps text-[10px]">Componente clave · solo desarrollo</p>
         <h1 className="mt-2 font-serif text-4xl font-bold text-azul">Los seis estados de una tarjeta</h1>
         <p className="mt-3 max-w-2xl font-ui text-[14px] leading-relaxed text-tinta-4">
-          Comparar contra <code>docs/diseno/EstadosTarjeta.png</code>. El estado se lee por color y por
+          Comparar contra <code>.claude/docs/diseno/EstadosTarjeta.png</code>. El estado se lee por color y por
           texto. La píldora dice qué pasó; el botón dice qué va a pasar. El renglón del precio muestra
           el rango real — es la única divergencia con el PNG, aprobada el 25 de agosto.
         </p>

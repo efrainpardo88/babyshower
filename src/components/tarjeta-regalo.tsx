@@ -3,8 +3,8 @@
 /**
  * La tarjeta de regalo — el componente del que cuelga todo el sitio público.
  *
- * Especificación visual: `docs/diseno/EstadosTarjeta.png` (los seis estados),
- * `docs/diseno/Main.png` (escritorio) y `docs/diseno/ListaMovil.png` (390px,
+ * Especificación visual: `.claude/docs/diseno/EstadosTarjeta.png` (los seis estados),
+ * `.claude/docs/diseno/Main.png` (escritorio) y `.claude/docs/diseno/ListaMovil.png` (390px,
  * donde la tarjeta se acuesta: foto a la izquierda y contenido a la derecha).
  *
  * Dos reglas que no se negocian:
@@ -14,7 +14,7 @@
  *
  * Única divergencia con el PNG, aprobada el 25/08/2026: donde el diseño dibuja
  * el glifo de tres pesos va el rango real («Entre $20.000 y $80.000»). Mismo
- * renglón, misma tipografía, mismo color — ver docs/decisiones.md.
+ * renglón, misma tipografía, mismo color — ver .claude/docs/decisiones.md.
  */
 
 import { calcularEstado, type EstadoRegalo, type RegaloParaEstado } from "@/lib/estado-regalo";

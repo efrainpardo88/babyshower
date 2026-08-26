@@ -1,8 +1,16 @@
 import type { Metadata } from "next";
-import { Great_Vibes, Cormorant_Garamond, Karla } from "next/font/google";
+import { The_Nautigal, Style_Script, Cormorant_Garamond, Karla } from "next/font/google";
 import "./globals.css";
 
-const script = Great_Vibes({ weight: "400", subsets: ["latin"], variable: "--fuente-script", display: "swap" });
+// Los dos textos grandes de la invitación llevan script distinto a propósito:
+// el nombre en The Nautigal, el evento en Style Script. Great Vibes salió del proyecto.
+//
+// PESOS REALES DE CADA UNA (según el catálogo de next/font):
+//  · The Nautigal → 400 y 700. Ambos se descargan, así que `font-bold` usa el
+//    archivo real y no un engrosado sintético del navegador.
+//  · Style Script → SOLO 400. No existe negrita. Ver la nota en globals.css.
+const nombre = The_Nautigal({ weight: ["400", "700"], subsets: ["latin"], variable: "--fuente-nombre", display: "swap" });
+const evento = Style_Script({ weight: "400", subsets: ["latin"], variable: "--fuente-evento", display: "swap" });
 const serif = Cormorant_Garamond({ weight: ["500", "600", "700"], style: ["normal", "italic"], subsets: ["latin"], variable: "--fuente-serif", display: "swap" });
 const ui = Karla({ weight: ["400", "600", "700"], subsets: ["latin"], variable: "--fuente-ui", display: "swap" });
 
@@ -19,7 +27,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="es-CO" className={`${script.variable} ${serif.variable} ${ui.variable}`}>
+    <html lang="es-CO" className={`${nombre.variable} ${evento.variable} ${serif.variable} ${ui.variable}`}>
       <body>{children}</body>
     </html>
   );
