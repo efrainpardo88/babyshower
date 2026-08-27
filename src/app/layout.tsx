@@ -19,14 +19,17 @@ export const metadata: Metadata = {
    * `template` hace que cada página solo declare SU parte y el nombre del sitio
    * se agregue solo. Antes cada una repetía el nombre a mano y ya se habían
    * desviado dos variantes: «Baby shower de Benjamín» y «La lista de Benjamín».
+   *
+   * El separador es el mismo guion en las dos, para que la pestaña no mezcle
+   * dos signos distintos: «La lista de regalos - Benjamín - Baby Shower».
    */
   title: {
-    default: "Baby shower de Benjamín",
-    template: "%s · Baby shower de Benjamín",
+    default: "Benjamín - Baby Shower",
+    template: "%s - Benjamín - Baby Shower",
   },
   description: "Domingo 13 de septiembre, 3:00 pm. Salón Social, Urb. Puerto Ventura. Acompáñanos a celebrar la llegada de Benjamín.",
   openGraph: {
-    title: "Baby shower de Benjamín",
+    title: "Benjamín - Baby Shower",
     description: "Domingo 13 de septiembre, 3:00 pm. Acompáñanos a celebrar la llegada de Benjamín.",
     locale: "es_CO",
     type: "website",
