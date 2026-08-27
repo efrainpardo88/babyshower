@@ -13,14 +13,16 @@
  *  · La píldora dice qué PASÓ; el botón dice qué VA A PASAR.
  *
  * DOS DIVERGENCIAS CON EL PNG, ambas deliberadas:
- *  · Donde el diseño dibuja el glifo de tres pesos va el rango real
- *    («Entre $20.000 y $80.000») — decisión del 25/08/2026.
+ *  · Donde el diseño dibuja el glifo de tres pesos van la especificación y la
+ *    nota de los papás. El invitado no ve precios — decisión del 27/08/2026.
  *  · Los estados «entre varios» y «N de M cupos» ya no existen: el 26/08/2026 se
  *    eliminaron el modo de grupo y los cupos. Quedan cuatro estados, no seis.
  *
  * Ver .claude/docs/decisiones.md.
  */
 
+import { useEffect, useState } from "react";
+import { useScrollBloqueado } from "@/lib/bloquear-scroll";
 import { calcularEstado, type EstadoRegalo, type RegaloParaEstado } from "@/lib/estado-regalo";
 export type RegaloTarjeta = RegaloParaEstado & {
   slug: string;
@@ -134,93 +136,180 @@ function Foto({
 
 /* ------------------------------------------------------------------ */
 
+/**
+ * La foto a pantalla completa.
+ *
+ * Existe porque en la tarjeta la foto va con `object-cover`: llena el marco y
+ * recorta lo que sobra, y en las apaisadas eso se lleva hasta el 42% de la
+ * imagen. Aquí va con `object-contain`, que es justo lo contrario — cabe entera
+ * aunque queden franjas de fondo.
+ *
+ * Se cierra de tres formas, como el editor del panel: la ×, la tecla Escape y
+ * tocar fuera de la foto.
+ */
+function VisorFoto({ url, nombre, onCerrar }: { url: string; nombre: string; onCerrar: () => void }) {
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Foto de ${nombre}`}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-10"
+    >
+      {/* El fondo es el área de cierre. Va antes que la figura en el DOM para
+          quedar por debajo: si no, taparía la foto y se la comería los clics. */}
+      <button
+        type="button"
+        aria-label="Cerrar la foto"
+        onClick={onCerrar}
+        className="absolute inset-0 cursor-zoom-out bg-tinta/80"
+      />
+
+      <figure className="relative m-0 flex max-h-full flex-col items-center gap-3">
+        {/* eslint-disable-next-line @next/next/no-img-element -- las fotos de producto son URLs externas que carga el panel */}
+        <img
+          src={url}
+          alt={nombre}
+          className="max-h-[78vh] w-auto max-w-full rounded-[14px] object-contain shadow-[0_18px_60px_-20px_rgba(0,0,0,.7)]"
+        />
+        <figcaption className="caps text-center text-[11px] !text-papel">{nombre}</figcaption>
+      </figure>
+
+      <button
+        type="button"
+        onClick={onCerrar}
+        aria-label="Cerrar la foto"
+        className="absolute top-4 right-4 flex h-11 w-11 items-center justify-center rounded-full border border-linea bg-papel text-[17px] text-tinta-3"
+      >
+        ×
+      </button>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
 export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar }: Props) {
+  const [visor, setVisor] = useState(false);
+
+  useScrollBloqueado(visor);
+
+  useEffect(() => {
+    if (!visor) return;
+    const alTecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setVisor(false);
+    };
+    window.addEventListener("keydown", alTecla);
+    return () => window.removeEventListener("keydown", alTecla);
+  }, [visor]);
+
   const estado = calcularEstado(regalo);
   const paleta = PALETA[familiaDe(estado)];
   const reservado = estado.tipo === "reservado";
 
   return (
-    <article
-      /* `sm:flex sm:flex-col` no es cosmético: sin él la columna de contenido no
-         se estira y el `mt-auto` del botón no tiene contra qué empujar. Antes no
-         se notaba porque todas las tarjetas traían el renglón del precio y median
-         casi lo mismo; con la nota de los papás, que unas tienen y otras no, los
-         botones quedaban a distinta altura dentro de la misma fila. */
-      className={`flex gap-4 overflow-hidden rounded-[20px] bg-papel p-3 text-left transition sm:flex-col sm:p-0 ${
-        enSeleccion
-          ? "border-2 border-azul shadow-[0_4px_18px_-8px_rgba(79,110,133,.5)]"
-          : "border border-linea shadow-[0_3px_14px_-10px_rgba(90,74,51,.5)]"
-      } ${reservado ? "opacity-80" : ""}`}
-    >
-      {/* Foto: a la izquierda en móvil, arriba desde sm — ver ListaMovil.png */}
-      <div className="relative h-[125px] w-[86px] shrink-0 overflow-hidden rounded-xl sm:h-[300px] sm:w-full sm:rounded-none">
-        <Foto tinte={paleta.foto} imagenUrl={regalo.imagenUrl} nombre={regalo.nombre} />
-        {enSeleccion && (
-          <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-azul text-papel">
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={2.5}
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m5 12.5 4.5 4.5L19 7.5" />
-            </svg>
-          </span>
-        )}
-      </div>
-
-      <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-2.5 sm:p-4 sm:pt-3.5">
-        <p className="caps text-[10px]">{regalo.categoriaNombre}</p>
-
-        <h3 className="font-serif text-[19px] leading-tight font-bold text-tinta">{regalo.nombre}</h3>
-
-        {/* Donde iba el precio (quitado el 27/08/2026): qué es exactamente y por
-            qué lo pidieron. Las dos son opcionales — la mayoría de regalos no
-            tiene nota — así que la tarjeta se encoge sola cuando faltan. */}
-        {regalo.especificacion && (
-          <p className="font-ui text-[13px] text-tinta-4">{regalo.especificacion}</p>
-        )}
-        {regalo.notaPapas && (
-          <p className="line-clamp-3 font-ui text-[12px] leading-snug text-tinta-5 italic">
-            {regalo.notaPapas}
-          </p>
-        )}
-
-        <div className="flex flex-wrap items-center gap-2">
-          <span
-            className={`inline-flex items-center rounded-full border px-3 py-1.5 font-ui text-[12px] font-semibold ${
-              enSeleccion ? PALETA.azul.pildora : paleta.pildora
-            }`}
-          >
-            {enSeleccion ? "En tu selección" : textoPildora(estado)}
-          </span>
-        </div>
-
-        <div className="mt-auto pt-1">
-          {enSeleccion ? (
+    <>
+      <article
+        /* `sm:flex sm:flex-col` no es cosmético: sin él la columna de contenido no
+           se estira y el `mt-auto` del botón no tiene contra qué empujar. Antes no
+           se notaba porque todas las tarjetas traían el renglón del precio y median
+           casi lo mismo; con la nota de los papás, que unas tienen y otras no, los
+           botones quedaban a distinta altura dentro de la misma fila. */
+        className={`flex gap-4 overflow-hidden rounded-[20px] bg-papel p-3 text-left transition sm:flex-col sm:p-0 ${
+          enSeleccion
+            ? "border-2 border-azul shadow-[0_4px_18px_-8px_rgba(79,110,133,.5)]"
+            : "border border-linea shadow-[0_3px_14px_-10px_rgba(90,74,51,.5)]"
+        } ${reservado ? "opacity-80" : ""}`}
+      >
+        {/* Foto: a la izquierda en móvil, arriba desde sm — ver ListaMovil.png */}
+        <div className="relative h-[125px] w-[86px] shrink-0 overflow-hidden rounded-xl sm:h-[300px] sm:w-full sm:rounded-none">
+          {/* Solo es botón si hay foto: ampliar el marcador «Sin foto» no sirve de nada. */}
+          {regalo.imagenUrl ? (
             <button
               type="button"
-              onClick={() => onQuitar?.(regalo.slug)}
-              className="h-12 w-full rounded-full border-[1.5px] border-azul bg-papel font-ui text-[15px] font-semibold text-azul transition hover:bg-azul-50"
+              onClick={() => setVisor(true)}
+              aria-label={`Ver la foto de ${regalo.nombre} completa`}
+              className="block h-full w-full cursor-zoom-in"
             >
-              Quitar de mi selección
+              <Foto tinte={paleta.foto} imagenUrl={regalo.imagenUrl} nombre={regalo.nombre} />
             </button>
           ) : (
-            <button
-              type="button"
-              disabled={reservado}
-              onClick={() => onEscoger?.(regalo.slug)}
-              className={`h-12 w-full rounded-full font-ui text-[15px] font-semibold transition ${paleta.boton}`}
-            >
-              {reservado ? "Ya lo reservaron" : "Lo regalo yo"}
-            </button>
+            <Foto tinte={paleta.foto} imagenUrl={regalo.imagenUrl} nombre={regalo.nombre} />
+          )}
+          {enSeleccion && (
+            <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-azul text-papel">
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2.5}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="m5 12.5 4.5 4.5L19 7.5" />
+              </svg>
+            </span>
           )}
         </div>
-      </div>
-    </article>
+
+        <div className="flex min-w-0 flex-1 flex-col gap-2 sm:gap-2.5 sm:p-4 sm:pt-3.5">
+          <p className="caps text-[10px]">{regalo.categoriaNombre}</p>
+
+          <h3 className="font-serif text-[19px] leading-tight font-bold text-tinta">{regalo.nombre}</h3>
+
+          {/* Donde iba el precio (quitado el 27/08/2026): qué es exactamente y por
+              qué lo pidieron. Las dos son opcionales — la mayoría de regalos no
+              tiene nota — así que la tarjeta se encoge sola cuando faltan. */}
+          {regalo.especificacion && (
+            <p className="font-ui text-[13px] text-tinta-4">{regalo.especificacion}</p>
+          )}
+          {regalo.notaPapas && (
+            <p className="line-clamp-3 font-ui text-[12px] leading-snug text-tinta-5 italic">
+              {regalo.notaPapas}
+            </p>
+          )}
+
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className={`inline-flex items-center rounded-full border px-3 py-1.5 font-ui text-[12px] font-semibold ${
+                enSeleccion ? PALETA.azul.pildora : paleta.pildora
+              }`}
+            >
+              {enSeleccion ? "En tu selección" : textoPildora(estado)}
+            </span>
+          </div>
+
+          <div className="mt-auto pt-1">
+            {enSeleccion ? (
+              <button
+                type="button"
+                onClick={() => onQuitar?.(regalo.slug)}
+                className="h-12 w-full rounded-full border-[1.5px] border-azul bg-papel font-ui text-[15px] font-semibold text-azul transition hover:bg-azul-50"
+              >
+                Quitar de mi selección
+              </button>
+            ) : (
+              <button
+                type="button"
+                disabled={reservado}
+                onClick={() => onEscoger?.(regalo.slug)}
+                className={`h-12 w-full rounded-full font-ui text-[15px] font-semibold transition ${paleta.boton}`}
+              >
+                {reservado ? "Ya lo reservaron" : "Lo regalo yo"}
+              </button>
+            )}
+          </div>
+        </div>
+      </article>
+
+      {visor && regalo.imagenUrl && (
+        <VisorFoto
+          url={regalo.imagenUrl}
+          nombre={regalo.nombre}
+          onCerrar={() => setVisor(false)}
+        />
+      )}
+    </>
   );
 }

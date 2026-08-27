@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useEffect, useState, useTransition } from "react";
+import { useScrollBloqueado } from "@/lib/bloquear-scroll";
 import { formatearRangoCorto } from "@/lib/precio";
 import {
   alternarPublicado,
@@ -142,29 +143,22 @@ export function AdminRegalos({
   }, []);
 
   /**
-   * En móvil el editor se abre como capa sobre la página, así que necesita dos cosas que un
-   * panel lateral no: salir con Escape, y que la tabla de atrás no siga
-   * desplazándose bajo el formulario.
+   * En móvil el editor se abre como capa sobre la página, así que necesita dos
+   * cosas que un panel lateral no: salir con Escape, y que la tabla de atrás no
+   * siga desplazándose bajo el formulario.
    *
-   * El bloqueo del scroll solo se aplica por debajo de `lg`: en escritorio el
-   * editor va al lado y la tabla tiene que poder moverse.
+   * El bloqueo solo se aplica por debajo de `lg`: en escritorio el editor va al
+   * lado y la tabla tiene que poder moverse.
    */
+  useScrollBloqueado(abierto, "(max-width: 1023px)");
+
   useEffect(() => {
     if (!abierto) return;
-
     const alTecla = (e: KeyboardEvent) => {
       if (e.key === "Escape") cerrar();
     };
     window.addEventListener("keydown", alTecla);
-
-    const enMovil = window.matchMedia("(max-width: 1023px)").matches;
-    const previo = document.body.style.overflow;
-    if (enMovil) document.body.style.overflow = "hidden";
-
-    return () => {
-      window.removeEventListener("keydown", alTecla);
-      document.body.style.overflow = previo;
-    };
+    return () => window.removeEventListener("keydown", alTecla);
   }, [abierto, cerrar]);
 
   function guardar() {
