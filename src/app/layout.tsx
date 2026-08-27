@@ -15,7 +15,15 @@ const serif = Cormorant_Garamond({ weight: ["500", "600", "700"], style: ["norma
 const ui = Karla({ weight: ["400", "600", "700"], subsets: ["latin"], variable: "--fuente-ui", display: "swap" });
 
 export const metadata: Metadata = {
-  title: "Baby shower de Benjamín",
+  /**
+   * `template` hace que cada página solo declare SU parte y el nombre del sitio
+   * se agregue solo. Antes cada una repetía el nombre a mano y ya se habían
+   * desviado dos variantes: «Baby shower de Benjamín» y «La lista de Benjamín».
+   */
+  title: {
+    default: "Baby shower de Benjamín",
+    template: "%s · Baby shower de Benjamín",
+  },
   description: "Domingo 13 de septiembre, 3:00 pm. Salón Social, Urb. Puerto Ventura. Acompáñanos a celebrar la llegada de Benjamín.",
   openGraph: {
     title: "Baby shower de Benjamín",

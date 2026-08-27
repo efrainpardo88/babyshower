@@ -20,7 +20,7 @@ import { BotonCancelar } from "@/components/boton-cancelar";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Tu reserva · La lista de Benjamín",
+  title: "Tu reserva",
   robots: { index: false },
 };
 

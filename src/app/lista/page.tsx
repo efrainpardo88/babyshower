@@ -13,7 +13,7 @@ import { cargarLista } from "@/lib/regalos";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "La lista de Benjamín",
+  title: "La lista de regalos",
   description:
     "Escoge un regalo y márcalo como tuyo. Así nadie repite y ya definimos tallas y cantidades.",
 };

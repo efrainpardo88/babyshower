@@ -8,7 +8,7 @@ import { Corazon } from "@/components/ilustraciones";
  * El middleware la deja pasar explícitamente.
  */
 export const metadata: Metadata = {
-  title: "Entrar · Panel",
+  title: "Entrar al panel",
   robots: { index: false, follow: false },
 };
 

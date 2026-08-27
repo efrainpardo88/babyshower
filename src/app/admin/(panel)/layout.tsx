@@ -12,7 +12,7 @@ import { Corazon } from "@/components/ilustraciones";
  * despliegue y esto seguiría en pie. Dos capas para los datos de los invitados.
  */
 export const metadata: Metadata = {
-  title: "Panel · La lista de Benjamín",
+  title: "Panel",
   robots: { index: false, follow: false },
 };
 

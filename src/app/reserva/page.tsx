@@ -13,7 +13,7 @@ import { cargarLista } from "@/lib/regalos";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Confirmar tu selección · La lista de Benjamín",
+  title: "Confirmar tu selección",
   robots: { index: false },
 };
 

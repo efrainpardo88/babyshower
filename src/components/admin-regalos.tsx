@@ -10,7 +10,7 @@
  * cambiando y contra qué se compara.
  */
 
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useState, useTransition } from "react";
 import {
   alternarPublicado,
   borrarRegalo,
@@ -113,6 +113,7 @@ export function AdminRegalos({
   }
 
   const abierto = creando || editando !== null;
+
   const publicados = regalos.filter((r) => r.publicado).length;
   const conReservas = regalos.filter((r) => r.reservasActivas > 0).length;
 
@@ -133,11 +134,37 @@ export function AdminRegalos({
     setAviso(null);
   }
 
-  function cerrar() {
+  const cerrar = useCallback(() => {
     setCreando(false);
     setEditando(null);
     setAviso(null);
-  }
+  }, []);
+
+  /**
+   * En móvil el editor se abre como capa sobre la página, así que necesita dos cosas que un
+   * panel lateral no: salir con Escape, y que la tabla de atrás no siga
+   * desplazándose bajo el formulario.
+   *
+   * El bloqueo del scroll solo se aplica por debajo de `lg`: en escritorio el
+   * editor va al lado y la tabla tiene que poder moverse.
+   */
+  useEffect(() => {
+    if (!abierto) return;
+
+    const alTecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") cerrar();
+    };
+    window.addEventListener("keydown", alTecla);
+
+    const enMovil = window.matchMedia("(max-width: 1023px)").matches;
+    const previo = document.body.style.overflow;
+    if (enMovil) document.body.style.overflow = "hidden";
+
+    return () => {
+      window.removeEventListener("keydown", alTecla);
+      document.body.style.overflow = previo;
+    };
+  }, [abierto, cerrar]);
 
   function guardar() {
     setAviso(null);
@@ -257,248 +284,284 @@ export function AdminRegalos({
 
         {/* ---------------- Editor ---------------- */}
         {abierto && (
-          <aside className="rounded-[20px] border border-linea bg-papel p-5 lg:sticky lg:top-6 lg:self-start">
-            <div className="flex items-center justify-between gap-3">
-              <h2 className="m-0 font-serif text-[18px] font-bold text-tinta">
-                {creando ? "Nuevo regalo" : "Editar regalo"}
-              </h2>
-              {editando && editando.reservasActivas > 0 && (
-                <span className="caps rounded-full bg-oso-claro px-2.5 py-1 text-[9px] text-tinta-3">
-                  {editando.reservasActivas} reservas
-                </span>
-              )}
-            </div>
+          <>
+            {/* Fondo que atenúa la tabla y cierra al tocarlo. Solo en móvil:
+                en escritorio el editor convive con la tabla, no la tapa. */}
+            <button
+              type="button"
+              aria-label="Cerrar el editor"
+              onClick={cerrar}
+              className="fixed inset-0 z-40 bg-tinta/25 lg:hidden"
+            />
 
-            <div className="mt-4 flex flex-col gap-3.5">
-              <label className="block">
-                <span className="font-ui text-[12px] font-bold text-tinta-2">Nombre</span>
-                <input
-                  value={form.nombre}
-                  onChange={(e) => cambiar("nombre", e.target.value)}
-                  className={`${ENTRADA} mt-1`}
-                />
-              </label>
-
-              <label className="block">
-                <span className="font-ui text-[12px] font-bold text-tinta-2">
-                  Especificación <span className="font-normal text-tinta-5">— talla o cantidad</span>
-                </span>
-                <input
-                  value={form.especificacion}
-                  onChange={(e) => cambiar("especificacion", e.target.value)}
-                  placeholder="Paquete x3"
-                  className={`${ENTRADA} mt-1`}
-                />
-              </label>
-
-              <label className="block">
-                <span className="font-ui text-[12px] font-bold text-tinta-2">Categoría</span>
-                <select
-                  value={form.categoriaId}
-                  onChange={(e) => cambiar("categoriaId", e.target.value)}
-                  className={`${ENTRADA} mt-1`}
-                >
-                  {categorias.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.nombre}
-                    </option>
-                  ))}
-                </select>
-              </label>
-
-              <div className="grid grid-cols-2 gap-3">
-                <label className="block">
-                  <span className="font-ui text-[12px] font-bold text-tinta-2">Precio mín.</span>
-                  <input
-                    inputMode="numeric"
-                    value={form.precioMin}
-                    onChange={(e) => cambiar("precioMin", e.target.value)}
-                    placeholder="45000"
-                    className={`${ENTRADA} mt-1 tabular-nums`}
-                  />
-                </label>
-                <label className="block">
-                  <span className="font-ui text-[12px] font-bold text-tinta-2">Precio máx.</span>
-                  <input
-                    inputMode="numeric"
-                    value={form.precioMax}
-                    onChange={(e) => cambiar("precioMax", e.target.value)}
-                    placeholder="90000"
-                    className={`${ENTRADA} mt-1 tabular-nums`}
-                  />
-                </label>
-              </div>
-
-              <div>
-                <span className="font-ui text-[12px] font-bold text-tinta-2">
-                  Cómo se puede reservar
-                </span>
-                <div className="mt-1.5 flex flex-col gap-2">
-                  {MODOS.map((m) => (
-                    <button
-                      key={m.valor}
-                      type="button"
-                      onClick={() => cambiar("modo", m.valor)}
-                      className={`flex items-start gap-3 rounded-xl border p-3 text-left transition ${
-                        form.modo === m.valor
-                          ? "border-azul bg-azul-50"
-                          : "border-linea-fuerte bg-papel hover:bg-crema"
-                      }`}
-                    >
-                      <span
-                        className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-[5px] ${
-                          form.modo === m.valor ? "border-azul" : "border-linea-fuerte"
-                        }`}
-                        aria-hidden="true"
-                      />
-                      <span>
-                        <span className="block font-ui text-[13px] font-bold text-tinta-2">
-                          {m.titulo}
-                        </span>
-                        <span className="block font-ui text-[11px] leading-relaxed text-tinta-5">
-                          {m.nota}
-                        </span>
-                      </span>
-                    </button>
-                  ))}
+            <aside
+              role="dialog"
+              aria-modal="true"
+              aria-label={creando ? "Nuevo regalo" : "Editar regalo"}
+              /* En móvil se abre como capa sobre la página y se desplaza por
+                 dentro, para que el formulario quede a la vista al tocar
+                 «Editar» — antes aparecía debajo de la tabla y había que
+                 buscarlo con scroll. El margen de `inset-3` deja ver el fondo:
+                 sin él no habría dónde tocar para cerrar.
+                 Desde lg vuelve a ser el panel lateral del diseño. Ojo: nada de
+                 `lg:static` junto a `lg:sticky` — las dos son `position` y gana
+                 el orden del CSS generado, no el de este atributo. */
+              className="fixed inset-3 z-50 overflow-y-auto rounded-[20px] border border-linea bg-papel p-5 shadow-[0_12px_40px_-12px_rgba(90,74,51,.55)] lg:sticky lg:inset-auto lg:top-6 lg:z-auto lg:self-start lg:overflow-visible lg:shadow-none"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="m-0 font-serif text-[18px] font-bold text-tinta">
+                  {creando ? "Nuevo regalo" : "Editar regalo"}
+                </h2>
+                <div className="flex items-center gap-2">
+                  {editando && editando.reservasActivas > 0 && (
+                    <span className="caps rounded-full bg-oso-claro px-2.5 py-1 text-[9px] text-tinta-3">
+                      {editando.reservasActivas} reservas
+                    </span>
+                  )}
+                  {/* Salida siempre visible arriba: en móvil el botón «Cancelar»
+                      queda al final de un formulario largo. */}
+                  <button
+                    type="button"
+                    onClick={cerrar}
+                    aria-label="Cerrar sin guardar"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-linea-fuerte text-[15px] text-tinta-4 lg:hidden"
+                  >
+                    ×
+                  </button>
                 </div>
               </div>
 
-              <div>
-                <span className="font-ui text-[12px] font-bold text-tinta-2">Foto</span>
+              <div className="mt-4 flex flex-col gap-3.5">
+                <label className="block">
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">Nombre</span>
+                  <input
+                    value={form.nombre}
+                    onChange={(e) => cambiar("nombre", e.target.value)}
+                    className={`${ENTRADA} mt-1`}
+                  />
+                </label>
 
-                <div className="mt-1.5 flex items-start gap-3">
-                  {/* Vista previa. Va con <img> y no con next/image porque la URL
-                      cambia sobre la marcha al subir otra. */}
-                  <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-linea-fuerte bg-crema">
-                    {form.imagenUrl ? (
-                      // eslint-disable-next-line @next/next/no-img-element -- vista previa dinámica
-                      <img src={form.imagenUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <span className="caps text-[8px] text-tinta-6">Sin foto</span>
-                    )}
+                <label className="block">
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">
+                    Especificación <span className="font-normal text-tinta-5">— talla o cantidad</span>
                   </span>
+                  <input
+                    value={form.especificacion}
+                    onChange={(e) => cambiar("especificacion", e.target.value)}
+                    placeholder="Paquete x3"
+                    className={`${ENTRADA} mt-1`}
+                  />
+                </label>
 
-                  <div className="min-w-0 flex-1">
-                    <label
-                      className={`caps flex h-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-azul bg-papel px-4 text-[10px] font-bold text-azul transition hover:bg-azul-50 ${
-                        subiendo ? "pointer-events-none opacity-60" : ""
-                      }`}
-                    >
-                      {subiendo ? "Subiendo…" : form.imagenUrl ? "Cambiar foto" : "Subir foto"}
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const a = e.target.files?.[0];
-                          // Se limpia el input para poder volver a elegir la
-                          // misma foto si la primera vez falló.
-                          e.target.value = "";
-                          if (a) void subirArchivo(a);
-                        }}
-                      />
-                    </label>
+                <label className="block">
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">Categoría</span>
+                  <select
+                    value={form.categoriaId}
+                    onChange={(e) => cambiar("categoriaId", e.target.value)}
+                    className={`${ENTRADA} mt-1`}
+                  >
+                    {categorias.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.nombre}
+                      </option>
+                    ))}
+                  </select>
+                </label>
 
-                    {form.imagenUrl && (
+                <div className="grid grid-cols-2 gap-3">
+                  <label className="block">
+                    <span className="font-ui text-[12px] font-bold text-tinta-2">Precio mín.</span>
+                    <input
+                      inputMode="numeric"
+                      value={form.precioMin}
+                      onChange={(e) => cambiar("precioMin", e.target.value)}
+                      placeholder="45000"
+                      className={`${ENTRADA} mt-1 tabular-nums`}
+                    />
+                  </label>
+                  <label className="block">
+                    <span className="font-ui text-[12px] font-bold text-tinta-2">Precio máx.</span>
+                    <input
+                      inputMode="numeric"
+                      value={form.precioMax}
+                      onChange={(e) => cambiar("precioMax", e.target.value)}
+                      placeholder="90000"
+                      className={`${ENTRADA} mt-1 tabular-nums`}
+                    />
+                  </label>
+                </div>
+
+                <div>
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">
+                    Cómo se puede reservar
+                  </span>
+                  <div className="mt-1.5 flex flex-col gap-2">
+                    {MODOS.map((m) => (
                       <button
+                        key={m.valor}
                         type="button"
-                        onClick={() => cambiar("imagenUrl", "")}
-                        className="caps mt-1.5 h-8 w-full rounded-full text-[9px] text-gris-texto hover:text-pardo"
+                        onClick={() => cambiar("modo", m.valor)}
+                        className={`flex items-start gap-3 rounded-xl border p-3 text-left transition ${
+                          form.modo === m.valor
+                            ? "border-azul bg-azul-50"
+                            : "border-linea-fuerte bg-papel hover:bg-crema"
+                        }`}
                       >
-                        Quitar la foto
+                        <span
+                          className={`mt-0.5 h-4 w-4 shrink-0 rounded-full border-[5px] ${
+                            form.modo === m.valor ? "border-azul" : "border-linea-fuerte"
+                          }`}
+                          aria-hidden="true"
+                        />
+                        <span>
+                          <span className="block font-ui text-[13px] font-bold text-tinta-2">
+                            {m.titulo}
+                          </span>
+                          <span className="block font-ui text-[11px] leading-relaxed text-tinta-5">
+                            {m.nota}
+                          </span>
+                        </span>
                       </button>
-                    )}
+                    ))}
                   </div>
                 </div>
 
-                <input
-                  value={form.imagenUrl}
-                  onChange={(e) => cambiar("imagenUrl", e.target.value)}
-                  placeholder="…o pega una URL"
-                  className={`${ENTRADA} mt-2 text-[11px]`}
-                />
-                <span className="mt-1 block font-ui text-[10px] leading-relaxed text-tinta-5">
-                  Se redimensiona a 1200px y se convierte a WebP al subirla.
-                </span>
-              </div>
+                <div>
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">Foto</span>
 
-              <label className="block">
-                <span className="font-ui text-[12px] font-bold text-tinta-2">
-                  Nota de los papás <span className="font-normal text-tinta-5">— opcional</span>
-                </span>
-                <textarea
-                  value={form.notaPapas}
-                  onChange={(e) => cambiar("notaPapas", e.target.value)}
-                  rows={2}
-                  className={`${ENTRADA} mt-1 resize-none`}
-                />
-              </label>
+                  <div className="mt-1.5 flex items-start gap-3">
+                    {/* Vista previa. Va con <img> y no con next/image porque la URL
+                        cambia sobre la marcha al subir otra. */}
+                    <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-linea-fuerte bg-crema">
+                      {form.imagenUrl ? (
+                        // eslint-disable-next-line @next/next/no-img-element -- vista previa dinámica
+                        <img src={form.imagenUrl} alt="" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="caps text-[8px] text-tinta-6">Sin foto</span>
+                      )}
+                    </span>
 
-              <button
-                type="button"
-                onClick={() => cambiar("publicado", !form.publicado)}
-                className="flex items-center justify-between gap-3 rounded-xl border border-linea-fuerte p-3 text-left"
-              >
-                <span>
-                  <span className="block font-ui text-[13px] font-bold text-tinta-2">Publicado</span>
-                  <span className="block font-ui text-[11px] text-tinta-5">
-                    Visible para los invitados
-                  </span>
-                </span>
-                <span
-                  className={`relative h-7 w-12 shrink-0 rounded-full transition ${
-                    form.publicado ? "bg-azul" : "bg-linea-fuerte"
-                  }`}
-                  aria-hidden="true"
-                >
-                  <span
-                    className={`absolute top-1 h-5 w-5 rounded-full bg-papel transition-all ${
-                      form.publicado ? "left-6" : "left-1"
-                    }`}
+                    <div className="min-w-0 flex-1">
+                      <label
+                        className={`caps flex h-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-azul bg-papel px-4 text-[10px] font-bold text-azul transition hover:bg-azul-50 ${
+                          subiendo ? "pointer-events-none opacity-60" : ""
+                        }`}
+                      >
+                        {subiendo ? "Subiendo…" : form.imagenUrl ? "Cambiar foto" : "Subir foto"}
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          onChange={(e) => {
+                            const a = e.target.files?.[0];
+                            // Se limpia el input para poder volver a elegir la
+                            // misma foto si la primera vez falló.
+                            e.target.value = "";
+                            if (a) void subirArchivo(a);
+                          }}
+                        />
+                      </label>
+
+                      {form.imagenUrl && (
+                        <button
+                          type="button"
+                          onClick={() => cambiar("imagenUrl", "")}
+                          className="caps mt-1.5 h-8 w-full rounded-full text-[9px] text-gris-texto hover:text-pardo"
+                        >
+                          Quitar la foto
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  <input
+                    value={form.imagenUrl}
+                    onChange={(e) => cambiar("imagenUrl", e.target.value)}
+                    placeholder="…o pega una URL"
+                    className={`${ENTRADA} mt-2 text-[11px]`}
                   />
-                </span>
-              </button>
+                  <span className="mt-1 block font-ui text-[10px] leading-relaxed text-tinta-5">
+                    Se redimensiona a 1200px y se convierte a WebP al subirla.
+                  </span>
+                </div>
 
-              {aviso && (
-                <p
-                  role="alert"
-                  className="m-0 rounded-xl border border-pardo-linea bg-pardo-100 px-3 py-2.5 font-ui text-[12px] leading-relaxed text-tinta-2"
-                >
-                  {aviso}
-                </p>
-              )}
+                <label className="block">
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">
+                    Nota de los papás <span className="font-normal text-tinta-5">— opcional</span>
+                  </span>
+                  <textarea
+                    value={form.notaPapas}
+                    onChange={(e) => cambiar("notaPapas", e.target.value)}
+                    rows={2}
+                    className={`${ENTRADA} mt-1 resize-none`}
+                  />
+                </label>
 
-              <div className="flex gap-2">
                 <button
                   type="button"
-                  onClick={guardar}
-                  disabled={pendiente}
-                  className="caps h-12 flex-1 rounded-full bg-azul text-[11px] font-bold !text-papel disabled:opacity-60"
+                  onClick={() => cambiar("publicado", !form.publicado)}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-linea-fuerte p-3 text-left"
                 >
-                  {pendiente ? "Guardando…" : "Guardar"}
+                  <span>
+                    <span className="block font-ui text-[13px] font-bold text-tinta-2">Publicado</span>
+                    <span className="block font-ui text-[11px] text-tinta-5">
+                      Visible para los invitados
+                    </span>
+                  </span>
+                  <span
+                    className={`relative h-7 w-12 shrink-0 rounded-full transition ${
+                      form.publicado ? "bg-azul" : "bg-linea-fuerte"
+                    }`}
+                    aria-hidden="true"
+                  >
+                    <span
+                      className={`absolute top-1 h-5 w-5 rounded-full bg-papel transition-all ${
+                        form.publicado ? "left-6" : "left-1"
+                      }`}
+                    />
+                  </span>
                 </button>
-                <button
-                  type="button"
-                  onClick={cerrar}
-                  className="caps h-12 rounded-full border border-linea-fuerte px-5 text-[11px] text-tinta-4"
-                >
-                  Cancelar
-                </button>
+
+                {aviso && (
+                  <p
+                    role="alert"
+                    className="m-0 rounded-xl border border-pardo-linea bg-pardo-100 px-3 py-2.5 font-ui text-[12px] leading-relaxed text-tinta-2"
+                  >
+                    {aviso}
+                  </p>
+                )}
+
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={guardar}
+                    disabled={pendiente}
+                    className="caps h-12 flex-1 rounded-full bg-azul text-[11px] font-bold !text-papel disabled:opacity-60"
+                  >
+                    {pendiente ? "Guardando…" : "Guardar"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cerrar}
+                    className="caps h-12 rounded-full border border-linea-fuerte px-5 text-[11px] text-tinta-4"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+
+                {editando && (
+                  <button
+                    type="button"
+                    onClick={borrar}
+                    disabled={pendiente}
+                    className="caps h-11 rounded-full text-[10px] text-gris-texto hover:text-pardo"
+                  >
+                    Borrar este regalo
+                  </button>
+                )}
               </div>
-
-              {editando && (
-                <button
-                  type="button"
-                  onClick={borrar}
-                  disabled={pendiente}
-                  className="caps h-11 rounded-full text-[10px] text-gris-texto hover:text-pardo"
-                >
-                  Borrar este regalo
-                </button>
-              )}
-            </div>
-          </aside>
+            </aside>
+          </>
         )}
       </div>
     </>
