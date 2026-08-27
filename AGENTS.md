@@ -178,7 +178,9 @@ Cada una de estas fue una decisión, no un olvido. Ver `.claude/docs/decisiones.
 - [x] Lógica de reserva con transacción, probada bajo concurrencia (`npm run prueba:reservas`)
 - [x] `/reserva` (formulario) y `/reserva/[token]` (comprobante, con cancelar)
 - [ ] `/regalo/[slug]`
-- [ ] Auth con Google y panel de administración
+- [x] Auth con Google, lista blanca por `ADMIN_EMAILS` y middleware sobre `/admin/*`
+- [x] `/admin` (resumen), `/admin/regalos` (CRUD) y `/admin/reservas` (tabla + CSV)
+- [ ] `/admin/galeria` y `/admin/ajustes`
 - [x] Base en Neon viva: proyecto `frosty-haze-68776446`, rama `production`, base `babyshower`
 - [x] Los 26 regalos cargados con `db:seed` (idempotente: se puede repetir)
 - [x] Acuarelas de la landing conectadas; SVG viejos eliminados
