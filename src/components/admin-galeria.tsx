@@ -9,6 +9,7 @@
 
 import { useState, useTransition } from "react";
 import { borrarFoto, moverFoto, subirFoto } from "@/app/admin/(panel)/galeria/acciones";
+import { prepararImagen } from "@/lib/reducir-imagen";
 
 export type Foto = {
   id: string;
@@ -23,14 +24,30 @@ export function AdminGaleria({ fotos }: { fotos: Foto[] }) {
   const [pendiente, empezar] = useTransition();
   const [confirmando, setConfirmando] = useState<string | null>(null);
 
-  async function subir(archivo: File) {
+  /**
+   * El `try/finally` no es adorno: sin él, cualquier fallo de red o de tamaño
+   * dejaba la promesa rota, `setSubiendo(false)` nunca corría y el botón se
+   * quedaba en «Subiendo…» sin decir nada. Era exactamente lo que veía Erica.
+   */
+  async function subir(original: File) {
     setAviso(null);
     setSubiendo(true);
-    const datos = new FormData();
-    datos.set("archivo", archivo);
-    const r = await subirFoto(datos);
-    setSubiendo(false);
-    if (!r.ok) setAviso(r.mensaje);
+    try {
+      const listo = await prepararImagen(original);
+      if (!listo.ok) {
+        setAviso(listo.mensaje);
+        return;
+      }
+      const datos = new FormData();
+      datos.set("archivo", listo.archivo);
+      const r = await subirFoto(datos);
+      if (!r.ok) setAviso(r.mensaje);
+    } catch (e) {
+      console.error("Falló la subida de la foto:", e);
+      setAviso("No se pudo subir la foto. Revisa la conexión e intenta de nuevo.");
+    } finally {
+      setSubiendo(false);
+    }
   }
 
   return (

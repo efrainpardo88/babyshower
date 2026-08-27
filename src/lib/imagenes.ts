@@ -16,11 +16,21 @@ import sharp from "sharp";
  * y en la tarjeta se ve a 300px de ancho. Servir el original haría que la lista
  * tardara una eternidad en datos móviles, que es como la van a abrir casi todos
  * los invitados.
+ *
+ * PERO NO TODAS SE MIRAN IGUAL, así que no se guardan iguales:
+ *  · Un regalo se ve en una tarjeta de 300px y, como mucho, en el visor. 1200px basta.
+ *  · Una foto de la galería se abre A PANTALLA COMPLETA, y ahí 1200px se nota
+ *    borrosa en un monitor grande o en la pantalla retina de un celular.
+ * Por eso la galería se guarda al doble de ancho y con más calidad: son las
+ * fotos de la revelación, no una miniatura de catálogo.
  */
 
-/** Lo más grande que se muestra una foto es la ficha; 1200px sobra. */
-const ANCHO_MAX = 1200;
-const CALIDAD = 78;
+type Ajuste = { ancho: number; calidad: number };
+
+const AJUSTES: Record<"regalos" | "galeria", Ajuste> = {
+  regalos: { ancho: 1200, calidad: 78 },
+  galeria: { ancho: 2400, calidad: 86 },
+};
 
 /** Antes de procesar: si alguien sube un video de 200 MB, se corta aquí. */
 const PESO_MAX = 12 * 1024 * 1024;
@@ -52,10 +62,11 @@ export async function subirImagen(archivo: File, carpeta: "regalos" | "galeria")
 
     // `withoutEnlargement` evita agrandar una foto ya pequeña, que solo la
     // haría pesar más sin verse mejor.
+    const { ancho, calidad } = AJUSTES[carpeta];
     const optimizada = await sharp(original)
       .rotate() // respeta la orientación EXIF: si no, las fotos de celular salen acostadas
-      .resize({ width: ANCHO_MAX, withoutEnlargement: true })
-      .webp({ quality: CALIDAD })
+      .resize({ width: ancho, withoutEnlargement: true })
+      .webp({ quality: calidad })
       .toBuffer();
 
     // `addRandomSuffix` evita que dos fotos con el mismo nombre se pisen, y de

@@ -23,6 +23,7 @@
 
 import { useEffect, useState } from "react";
 import { useScrollBloqueado } from "@/lib/bloquear-scroll";
+import { type EnlaceTitulado } from "@/lib/enlaces";
 import { calcularEstado, type EstadoRegalo, type RegaloParaEstado } from "@/lib/estado-regalo";
 export type RegaloTarjeta = RegaloParaEstado & {
   slug: string;
@@ -33,6 +34,8 @@ export type RegaloTarjeta = RegaloParaEstado & {
   especificacion: string | null;
   /** Por qué lo pidieron. Ocupa el renglón donde estaba el precio. */
   notaPapas: string | null;
+  /** Títulos ya resueltos de las URL de la nota. Ver `titulo-enlace.ts`. */
+  enlaces: EnlaceTitulado[];
 };
 
 type Props = {
@@ -130,6 +133,46 @@ function Foto({
         <path d="m4 17 4.5-4.5 3.5 3.5 3-3L20 17" />
       </svg>
       <span className="caps text-[9px] text-tinta/35">Foto</span>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ */
+
+/**
+ * «Dónde conseguirlo»: las tiendas que sugirieron los papás.
+ *
+ * Es una AYUDA, no una obligación — el invitado compra donde quiera. Por eso va
+ * en letra pequeña debajo de la nota y no compite con el botón.
+ *
+ * El texto de cada enlace es el título de la página, que el panel resolvió una
+ * vez al guardar el regalo. Cuando no se pudo —la tienda no respondió, tardó de
+ * más, devolvió una pantalla de robot— se muestra la dirección completa, que al
+ * menos deja ver a dónde lleva. Ver `titulo-enlace.ts`.
+ *
+ * Abren en otra pestaña: el invitado va a comparar precios y no queremos que
+ * pierda la selección que lleva armada en esta.
+ */
+function DondeConseguirlo({ enlaces }: { enlaces: EnlaceTitulado[] }) {
+  if (enlaces.length === 0) return null;
+  return (
+    <div className="flex flex-col gap-1">
+      <span className="caps text-[9px]">Dónde conseguirlo</span>
+      <ul className="m-0 flex list-none flex-col gap-0.5 p-0">
+        {enlaces.map((e) => (
+          <li key={e.url} className="m-0">
+            <a
+              href={e.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={e.url}
+              className="font-ui text-[12px] leading-snug font-semibold text-azul underline decoration-azul-200 underline-offset-2 break-words"
+            >
+              {e.tienda}
+            </a>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
@@ -269,6 +312,8 @@ export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar
               {regalo.notaPapas}
             </p>
           )}
+
+          <DondeConseguirlo enlaces={regalo.enlaces} />
 
           <div className="flex flex-wrap items-center gap-2">
             <span

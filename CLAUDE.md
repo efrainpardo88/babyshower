@@ -141,14 +141,35 @@ pueden ir ahí porque las pone git, no la aplicación.
 **Todo el trato con el almacenamiento vive en `src/lib/imagenes.ts`.** Si algún
 día se cambia de proveedor, se cambia ese archivo y nada más.
 
-**Se redimensionan al subir**: 1200px de ancho y WebP. No es un lujo — una foto
-de celular son 3–4 MB y en la tarjeta se ve a 300px. En la prueba, 221 KB
-pasaron a 42 KB. Sin esto la lista arrancaría lentísima en datos móviles, que es
-como la van a abrir casi todos los invitados.
+**Se redimensionan al subir**, y NO todas al mismo tamaño (`src/lib/imagenes.ts`):
+
+| Destino | Se guarda a | Por qué |
+|---|---|---|
+| `regalos` | 1200px · calidad 78 | Se ve en una tarjeta de 300px y en el visor |
+| `galeria` | 2400px · calidad 86 | Se abre A PANTALLA COMPLETA; a 1200px se ve borrosa |
+
+No es un lujo: una foto de celular son 3–7 MB. Sin esto la lista arrancaría
+lentísima en datos móviles, que es como la van a abrir casi todos los invitados.
+
+**Y se achican también EN EL NAVEGADOR antes de enviarlas** (`src/lib/reducir-imagen.ts`).
+No es duplicar trabajo: las Server Actions traen un tope de 1 MB por defecto, así
+que una foto de 6,8 MB rompía la petición antes de llegar al servidor. El tope
+está en 4 MB (`next.config.ts`) y no debe subirse más: en Vercel el cuerpo de una
+petición no pasa de ~4,5 MB. **Toda subida va con `try/finally`**: sin él, un
+fallo dejaba el botón en «Subiendo…» para siempre y sin mensaje. Pasó de verdad.
 
 La galería de la landing sale de la tabla `fotos_galeria`. Si está vacía, se
 muestran marcadores de color; en cuanto se sube la primera foto, se publican
-las reales sin tocar código ni desplegar.
+las reales sin tocar código ni desplegar. Al tocar una se abre a pantalla
+completa (`src/components/galeria.tsx`): se pasa deslizando, con las flechas o
+con ← →, y se sale con la ×, con Escape o tocando el fondo.
+
+**Los enlaces de tienda van en `regalos.links_compra`, no en la nota.** Se
+escriben en el panel, una URL por renglón; al guardar, el servidor lee el
+`<title>` de cada página y lo deja escrito (`src/lib/titulo-enlace.ts`). Se
+resuelve AL GUARDAR y no al pintar la lista porque cada consulta tarda entre 0,1
+y 1,9 s. Si la tienda no responde, el enlace se guarda igual con la URL de
+etiqueta — nunca desaparece.
 
 ## Rutas
 

@@ -14,6 +14,7 @@ export default async function Regalos() {
       nombre: regalos.nombre,
       especificacion: regalos.especificacion,
       notaPapas: regalos.notaPapas,
+      linksCompra: regalos.linksCompra,
       categoriaId: regalos.categoriaId,
       categoriaNombre: categorias.nombre,
       precioMin: regalos.precioMin,

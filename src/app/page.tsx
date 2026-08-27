@@ -16,6 +16,7 @@ import ln4l from "../../public/img/ln-4-l.png";
 import ln4r from "../../public/img/ln-4-r.png";
 import { Corazon, Divisor } from "@/components/ilustraciones";
 import { CuentaRegresiva } from "@/components/cuenta-regresiva";
+import { Galeria } from "@/components/galeria";
 import { asc } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { fotosGaleria } from "@/lib/db/schema";
@@ -196,52 +197,6 @@ function Icono({ tipo }: { tipo: string }) {
   );
 }
 
-function Polaroid({
-  titulo,
-  rot,
-  tinte,
-  url,
-}: {
-  titulo: string;
-  rot: string;
-  tinte: string;
-  url?: string;
-}) {
-  return (
-    <figure
-      className={`${rot} -ml-2 rounded-sm bg-papel p-2 pb-6 shadow-[0_6px_20px_-10px_rgba(90,74,51,.45)] first:ml-0`}
-    >
-      <div
-        className={`${url ? "" : tinte} flex h-[112px] w-[92px] flex-col items-center justify-center gap-1.5 overflow-hidden text-tinta/30 sm:h-[clamp(164px,11.7vw,220px)] sm:w-[clamp(136px,9.7vw,182px)]`}
-      >
-        {url ? (
-          // eslint-disable-next-line @next/next/no-img-element -- la URL viene de la base, no del build
-          <img src={url} alt={titulo} className="h-full w-full object-cover" />
-        ) : (
-          <>
-        <svg
-          viewBox="0 0 24 24"
-          className="h-6 w-6"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          aria-hidden="true"
-        >
-          <rect x="3" y="5" width="18" height="14" rx="2.5" />
-          <circle cx="8.5" cy="10" r="1.8" />
-          <path d="m4 17 4.5-4.5 3.5 3.5 3-3L20 17" />
-        </svg>
-            <figcaption className="px-2 text-center font-ui text-[8px] font-bold tracking-[.12em] uppercase">
-              {titulo}
-            </figcaption>
-          </>
-        )}
-      </div>
-    </figure>
-  );
-}
 
 /* ------------------------------------------------------------------ */
 
@@ -423,11 +378,7 @@ export default async function Home() {
                 Galería
               </h2>
             </div>
-            <div className="mt-5 flex flex-wrap items-center justify-center pl-2 lg:justify-start">
-              {polaroids.map((f, i) => (
-                <Polaroid key={`${f.titulo}-${i}`} {...f} />
-              ))}
-            </div>
+            <Galeria fotos={polaroids} />
           </div>
 
           {/* Confirmar asistencia */}

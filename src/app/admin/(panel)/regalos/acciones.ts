@@ -1,6 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { resolverEnlaces } from "@/lib/titulo-enlace";
 import { and, eq, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { regalos, reservas } from "@/lib/db/schema";
@@ -40,6 +41,8 @@ export type DatosRegalo = {
   nombre: string;
   especificacion: string;
   notaPapas: string;
+  /** Una URL por renglón, tal como las escribe el papá. */
+  enlaces: string;
   categoriaId: string;
   precioMin: string;
   precioMax: string;
@@ -95,9 +98,14 @@ export async function crearRegalo(d: DatosRegalo): Promise<Respuesta> {
     sql`select coalesce(max(orden), 0)::int as ultimo from ${regalos}`,
   );
 
+  // Igual que el correo de reserva: si la tienda no responde, el regalo se
+  // guarda de todas formas y la tarjeta enseña la URL completa.
+  const enlaces = await resolverEnlaces(d.enlaces);
+
   await db.insert(regalos).values({
     slug,
     nombre: d.nombre.trim(),
+    linksCompra: JSON.stringify(enlaces),
     especificacion: d.especificacion.trim() || null,
     notaPapas: d.notaPapas.trim() || null,
     categoriaId: d.categoriaId,
@@ -136,11 +144,14 @@ export async function guardarRegalo(id: string, d: DatosRegalo): Promise<Respues
     }
   }
 
+  const enlaces = await resolverEnlaces(d.enlaces);
+
   await db
     .update(regalos)
     .set({
       // `slug` a propósito NO se toca: ver la nota de arriba.
       nombre: d.nombre.trim(),
+      linksCompra: JSON.stringify(enlaces),
       especificacion: d.especificacion.trim() || null,
       notaPapas: d.notaPapas.trim() || null,
       categoriaId: d.categoriaId,

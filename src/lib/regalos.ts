@@ -1,4 +1,5 @@
 import { eq, asc } from "drizzle-orm";
+import { leerEnlaces } from "./enlaces";
 import { db } from "./db";
 import { categorias, regalos, reservas } from "./db/schema";
 import type { RegaloTarjeta } from "@/components/tarjeta-regalo";
@@ -39,6 +40,7 @@ export async function cargarLista(): Promise<Lista> {
       nombre: regalos.nombre,
       especificacion: regalos.especificacion,
       notaPapas: regalos.notaPapas,
+      linksCompra: regalos.linksCompra,
       imagenUrl: regalos.imagenUrl,
       modo: regalos.modo,
       categoriaSlug: categorias.slug,
@@ -75,6 +77,7 @@ export async function cargarLista(): Promise<Lista> {
     nombre: f.nombre,
     especificacion: f.especificacion,
     notaPapas: f.notaPapas,
+    enlaces: leerEnlaces(f.linksCompra),
     categoriaSlug: f.categoriaSlug,
     categoriaNombre: f.categoriaNombre,
     imagenUrl: f.imagenUrl,

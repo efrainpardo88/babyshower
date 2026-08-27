@@ -12,6 +12,8 @@
 
 import { useCallback, useEffect, useState, useTransition } from "react";
 import { useScrollBloqueado } from "@/lib/bloquear-scroll";
+import { leerEnlaces } from "@/lib/enlaces";
+import { prepararImagen } from "@/lib/reducir-imagen";
 import { formatearRangoCorto } from "@/lib/precio";
 import {
   alternarPublicado,
@@ -28,6 +30,7 @@ export type RegaloAdmin = {
   nombre: string;
   especificacion: string | null;
   notaPapas: string | null;
+  linksCompra: string;
   categoriaId: string;
   categoriaNombre: string;
   precioMin: number | null;
@@ -45,6 +48,7 @@ const VACIO: DatosRegalo = {
   nombre: "",
   especificacion: "",
   notaPapas: "",
+  enlaces: "",
   categoriaId: "",
   precioMin: "",
   precioMax: "",
@@ -59,6 +63,11 @@ function aFormulario(r: RegaloAdmin): DatosRegalo {
     nombre: r.nombre,
     especificacion: r.especificacion ?? "",
     notaPapas: r.notaPapas ?? "",
+    // Se editan las direcciones, no los títulos: esos los vuelve a buscar el
+    // servidor al guardar, porque una ficha de producto cambia de nombre.
+    enlaces: leerEnlaces(r.linksCompra)
+      .map((e) => e.url)
+      .join("\n"),
     categoriaId: r.categoriaId,
     precioMin: r.precioMin?.toString() ?? "",
     precioMax: r.precioMax?.toString() ?? "",
@@ -103,15 +112,27 @@ export function AdminRegalos({
    * La imagen se sube en cuanto se elige, no al guardar. Así se ve la vista
    * previa de inmediato y, si la foto está mal, se cambia antes de guardar.
    */
-  async function subirArchivo(archivo: File) {
+  async function subirArchivo(original: File) {
     setAviso(null);
     setSubiendo(true);
-    const datos = new FormData();
-    datos.set("archivo", archivo);
-    const r = await subirImagenDeRegalo(datos);
-    setSubiendo(false);
-    if (r.ok) cambiar("imagenUrl", r.url);
-    else setAviso(r.mensaje);
+    try {
+      const listo = await prepararImagen(original);
+      if (!listo.ok) {
+        setAviso(listo.mensaje);
+        return;
+      }
+      const datos = new FormData();
+      datos.set("archivo", listo.archivo);
+      const r = await subirImagenDeRegalo(datos);
+      if (r.ok) cambiar("imagenUrl", r.url);
+      else setAviso(r.mensaje);
+    } catch (e) {
+      // Sin esto el botón se quedaba en «Subiendo…» para siempre.
+      console.error("Falló la subida de la imagen:", e);
+      setAviso("No se pudo subir la imagen. Revisa la conexión e intenta de nuevo.");
+    } finally {
+      setSubiendo(false);
+    }
   }
 
   const abierto = creando || editando !== null;
@@ -497,6 +518,24 @@ export function AdminRegalos({
                     rows={2}
                     className={`${ENTRADA} mt-1 resize-none`}
                   />
+                </label>
+
+                <label className="block">
+                  <span className="font-ui text-[12px] font-bold text-tinta-2">
+                    Dónde conseguirlo <span className="font-normal text-tinta-5">— opcional</span>
+                  </span>
+                  <textarea
+                    value={form.enlaces}
+                    onChange={(e) => cambiar("enlaces", e.target.value)}
+                    rows={3}
+                    placeholder={"https://www.amazon.com/…\nhttps://www.falabella.com.co/…"}
+                    className={`${ENTRADA} mt-1 resize-none`}
+                  />
+                  <span className="mt-1 block font-ui text-[11px] leading-snug text-tinta-5">
+                    Una dirección por renglón. Al guardar se busca el nombre de cada
+                    página para que el invitado no vea una URL larga; si la tienda no
+                    responde, se muestra la dirección completa.
+                  </span>
                 </label>
 
                 <button
