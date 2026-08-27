@@ -3,18 +3,22 @@
 /**
  * La tarjeta de regalo — el componente del que cuelga todo el sitio público.
  *
- * Especificación visual: `.claude/docs/diseno/EstadosTarjeta.png` (los seis estados),
- * `.claude/docs/diseno/Main.png` (escritorio) y `.claude/docs/diseno/ListaMovil.png` (390px,
- * donde la tarjeta se acuesta: foto a la izquierda y contenido a la derecha).
+ * Especificación visual: `.claude/docs/diseno/EstadosTarjeta.png` (los estados),
+ * `.claude/docs/diseno/Main.png` (escritorio) y `.claude/docs/diseno/ListaMovil.png`
+ * (390px, donde la tarjeta se acuesta: foto a la izquierda y contenido a la derecha).
  *
  * Dos reglas que no se negocian:
  *  · El estado se lee por COLOR y por TEXTO. Nadie tiene que distinguir verde de
  *    azul para entender qué pasa: la píldora siempre lo dice con letras.
  *  · La píldora dice qué PASÓ; el botón dice qué VA A PASAR.
  *
- * Única divergencia con el PNG, aprobada el 25/08/2026: donde el diseño dibuja
- * el glifo de tres pesos va el rango real («Entre $20.000 y $80.000»). Mismo
- * renglón, misma tipografía, mismo color — ver .claude/docs/decisiones.md.
+ * DOS DIVERGENCIAS CON EL PNG, ambas deliberadas:
+ *  · Donde el diseño dibuja el glifo de tres pesos va el rango real
+ *    («Entre $20.000 y $80.000») — decisión del 25/08/2026.
+ *  · Los estados «entre varios» y «N de M cupos» ya no existen: el 26/08/2026 se
+ *    eliminaron el modo de grupo y los cupos. Quedan cuatro estados, no seis.
+ *
+ * Ver .claude/docs/decisiones.md.
  */
 
 import { calcularEstado, type EstadoRegalo, type RegaloParaEstado } from "@/lib/estado-regalo";
@@ -32,7 +36,7 @@ export type RegaloTarjeta = RegaloParaEstado &
 
 type Props = {
   regalo: RegaloTarjeta;
-  /** Sexto estado. Es del navegador de este invitado, no del servidor. */
+  /** El cuarto estado. Es del navegador de este invitado, no del servidor. */
   enSeleccion?: boolean;
   onEscoger?: (slug: string) => void;
   onQuitar?: (slug: string) => void;
@@ -41,7 +45,7 @@ type Props = {
 /* ------------------------------------------------------------------ */
 /* Paleta por estado. Todo sale de globals.css; aquí no hay colores nuevos. */
 
-type Familia = "azul" | "gris" | "salvia" | "pardo";
+type Familia = "azul" | "gris" | "salvia";
 
 const PALETA: Record<Familia, { foto: string; pildora: string; boton: string }> = {
   azul: {
@@ -59,11 +63,6 @@ const PALETA: Record<Familia, { foto: string; pildora: string; boton: string }> 
     pildora: "bg-salvia-100 text-salvia border-salvia-linea",
     boton: "bg-azul text-papel hover:bg-[#456073]",
   },
-  pardo: {
-    foto: "bg-linear-to-br from-pardo-100 to-oso",
-    pildora: "bg-pardo-100 text-pardo border-pardo-linea",
-    boton: "bg-pardo text-papel hover:bg-[#75593A]",
-  },
 };
 
 /** Qué familia de color le toca a cada estado. El color codifica, no decora. */
@@ -71,11 +70,8 @@ function familiaDe(estado: EstadoRegalo): Familia {
   switch (estado.tipo) {
     case "reservado":
       return "gris";
-    case "cupos":
     case "sin-limite":
       return "salvia";
-    case "grupo":
-      return "pardo";
     default:
       return "azul";
   }
@@ -83,44 +79,21 @@ function familiaDe(estado: EstadoRegalo): Familia {
 
 /**
  * El texto de la píldora: qué pasó con este regalo.
- * Cuando está en la selección, la píldora la reemplaza «En tu selección» —
- * ver el sexto estado de EstadosTarjeta.png. Es justo el que evita el error de
- * creer que ya reservaste, así que no puede seguir diciendo «Disponible».
+ * Cuando está en la selección, la píldora la reemplaza «En tu selección». Es
+ * justo el estado que evita el error de creer que ya reservaste, así que no
+ * puede seguir diciendo «Disponible».
  */
 function textoPildora(estado: EstadoRegalo): string {
   switch (estado.tipo) {
     case "disponible":
       return "Disponible";
     case "reservado":
-      if (estado.motivo === "sin-cupos") return "Ya no quedan cupos";
-      return estado.porQuien ? `Lo reservó ${estado.porQuien}` : "Ya lo reservaron";
-    case "cupos":
-      return `${estado.tomados} de ${estado.total} cupos`;
+      return "Ya lo reservaron";
     case "sin-limite":
       return estado.tomados > 0
         ? `Siempre disponible · ${estado.tomados} ya lo escogieron`
         : "Siempre disponible";
-    case "grupo": {
-      const n = estado.apuntados.length;
-      if (n === 0) return "Entre varios · nadie aún";
-      return `Entre varios · ${n} ${n === 1 ? "apuntado" : "apuntados"}`;
-    }
   }
-}
-
-/** El texto del botón: qué va a pasar si lo tocas. */
-function textoBoton(estado: EstadoRegalo): string {
-  if (estado.tipo === "reservado") {
-    return estado.motivo === "sin-cupos" ? "Ya no quedan cupos" : "Ya lo reservaron";
-  }
-  return estado.tipo === "grupo" ? "Me apunto" : "Lo regalo yo";
-}
-
-function iniciales(nombre: string): string {
-  const partes = nombre.trim().split(/\s+/).filter(Boolean);
-  if (partes.length === 0) return "?";
-  if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
-  return (partes[0][0] + partes[1][0]).toUpperCase();
 }
 
 /* ------------------------------------------------------------------ */
@@ -160,49 +133,11 @@ function Foto({
   );
 }
 
-/** Los segmentos de cupos: hacen visible cuánto falta sin pedirle cuentas al invitado. */
-function Segmentos({ tomados, total }: { tomados: number; total: number }) {
-  return (
-    <div className="flex gap-1" aria-hidden="true">
-      {Array.from({ length: total }, (_, i) => (
-        <span
-          key={i}
-          className={`h-[5px] flex-1 rounded-full ${i < tomados ? "bg-salvia" : "bg-salvia-100"}`}
-        />
-      ))}
-    </div>
-  );
-}
-
-/** Quiénes se apuntaron. La página los muestra; el dinero lo resuelven ellos. */
-function Apuntados({ nombres }: { nombres: string[] }) {
-  const tintes = ["bg-pardo-100 text-pardo", "bg-azul-200 text-azul", "bg-salvia-100 text-salvia"];
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex">
-        {nombres.slice(0, 3).map((nombre, i) => (
-          <span
-            key={`${nombre}-${i}`}
-            title={nombre}
-            className={`${tintes[i % tintes.length]} ${i > 0 ? "-ml-2" : ""} flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 border-papel font-ui text-[10px] font-bold`}
-          >
-            {iniciales(nombre)}
-          </span>
-        ))}
-      </div>
-      <span className="font-ui text-[12px] text-tinta-5">
-        {nombres.length > 3 ? `y ${nombres.length - 3} más · ` : ""}se organizan entre ellos
-      </span>
-    </div>
-  );
-}
-
 /* ------------------------------------------------------------------ */
 
 export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar }: Props) {
   const estado = calcularEstado(regalo);
-  const familia = familiaDe(estado);
-  const paleta = PALETA[familia];
+  const paleta = PALETA[familiaDe(estado)];
   const reservado = estado.tipo === "reservado";
 
   // El rango real reemplaza al glifo del PNG. Sin rango cargado, cae a nivelPrecio.
@@ -262,11 +197,6 @@ export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar
           </span>
         </div>
 
-        {estado.tipo === "cupos" && <Segmentos tomados={estado.tomados} total={estado.total} />}
-        {estado.tipo === "grupo" && estado.apuntados.length > 0 && (
-          <Apuntados nombres={estado.apuntados} />
-        )}
-
         <div className="mt-auto pt-1">
           {enSeleccion ? (
             <button
@@ -283,7 +213,7 @@ export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar
               onClick={() => onEscoger?.(regalo.slug)}
               className={`h-12 w-full rounded-full font-ui text-[15px] font-semibold transition ${paleta.boton}`}
             >
-              {textoBoton(estado)}
+              {reservado ? "Ya lo reservaron" : "Lo regalo yo"}
             </button>
           )}
         </div>

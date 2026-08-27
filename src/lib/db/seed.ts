@@ -7,8 +7,8 @@
  *
  * Reglas que hay detrás de estos datos (ver .claude/docs/decisiones.md):
  *  · Todo ítem lleva talla o cantidad EXPLÍCITA en el nombre. Eso evita los repetidos.
- *  · Los pañales tienen cupos repartidos a propósito: casi nadie debe regalar talla RN,
- *    porque se usa unas tres semanas. El grueso va a tallas 1 y 2.
+ *  · Solo hay dos modos: `unico` (uno lo toma y sale de la lista) y `multiple`
+ *    (sin tope, nunca se agota). Los cupos se eliminaron el 26/08/2026.
  *  · `precioMin`/`precioMax` son PÚBLICOS: el invitado ve «Entre $20.000 y $80.000».
  *    Por eso tienen que ser rangos honestos y actuales — si están mal, el invitado
  *    compra mal. Revisarlos antes de cada seed.
@@ -24,9 +24,7 @@ import { categorias, regalos } from "./schema";
 type Semilla = {
   nombre: string;
   especificacion?: string;
-  modo: "unico" | "multiple" | "grupo";
-  cuposMax?: number | null;
-  metaPersonas?: number | null;
+  modo: "unico" | "multiple";
   precioMin: number;
   precioMax: number;
   nivelPrecio: "$" | "$$" | "$$$";
@@ -44,23 +42,23 @@ const CATEGORIAS = [
 
 const REGALOS: Record<string, Semilla[]> = {
   "entre-varios": [
-    { nombre: "Silla de carro", especificacion: "Grupo 0+ · nueva, nunca usada", modo: "grupo", metaPersonas: 4, precioMin: 400_000, precioMax: 1_200_000, nivelPrecio: "$$$",
+    { nombre: "Silla de carro", especificacion: "Grupo 0+ · nueva, nunca usada", modo: "unico", precioMin: 400_000, precioMax: 1_200_000, nivelPrecio: "$$$",
       notaPapas: "Es el único obligatorio por ley: sin silla no nos dejan salir de la clínica. Preferimos con base Isofix porque la vamos a mover entre dos carros." },
-    { nombre: "Coche / carriola", modo: "grupo", metaPersonas: 4, precioMin: 500_000, precioMax: 1_500_000, nivelPrecio: "$$$" },
-    { nombre: "Ular (cargador)", modo: "grupo", metaPersonas: 3, precioMin: 200_000, precioMax: 600_000, nivelPrecio: "$$$" },
-    { nombre: "Cambiador / cómoda", modo: "grupo", metaPersonas: 3, precioMin: 300_000, precioMax: 800_000, nivelPrecio: "$$$" },
-    { nombre: "Monitor de bebé", especificacion: "Con cámara", modo: "grupo", metaPersonas: 3, precioMin: 200_000, precioMax: 500_000, nivelPrecio: "$$$" },
-    { nombre: "Silla alta de comer", especificacion: "Se usa desde los 6 meses", modo: "grupo", metaPersonas: 3, precioMin: 200_000, precioMax: 600_000, nivelPrecio: "$$$" },
-    { nombre: "Almohada de lactancia", modo: "grupo", metaPersonas: 2, precioMin: 80_000, precioMax: 180_000, nivelPrecio: "$$" },
+    { nombre: "Coche / carriola", modo: "unico", precioMin: 500_000, precioMax: 1_500_000, nivelPrecio: "$$$" },
+    { nombre: "Ular (cargador)", modo: "unico", precioMin: 200_000, precioMax: 600_000, nivelPrecio: "$$$" },
+    { nombre: "Cambiador / cómoda", modo: "unico", precioMin: 300_000, precioMax: 800_000, nivelPrecio: "$$$" },
+    { nombre: "Monitor de bebé", especificacion: "Con cámara", modo: "unico", precioMin: 200_000, precioMax: 500_000, nivelPrecio: "$$$" },
+    { nombre: "Silla alta de comer", especificacion: "Se usa desde los 6 meses", modo: "unico", precioMin: 200_000, precioMax: 600_000, nivelPrecio: "$$$" },
+    { nombre: "Almohada de lactancia", modo: "unico", precioMin: 80_000, precioMax: 180_000, nivelPrecio: "$$" },
   ],
   panales: [
-    { nombre: "Pañales talla recién nacido", especificacion: "Talla RN", modo: "multiple", cuposMax: 2, precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$",
+    { nombre: "Pañales talla recién nacido", especificacion: "Talla RN", modo: "multiple", precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$",
       notaPapas: "Solo dos, de verdad: esta talla se usa unas tres semanas y después estorba." },
-    { nombre: "Pañales talla 1", especificacion: "Etapa 1", modo: "multiple", cuposMax: 5, precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
-    { nombre: "Pañales talla 2", especificacion: "Etapa 2", modo: "multiple", cuposMax: 5, precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
-    { nombre: "Pañales talla 3", especificacion: "Etapa 3", modo: "multiple", cuposMax: 4, precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
-    { nombre: "Pañales talla 4", especificacion: "Etapa 4", modo: "multiple", cuposMax: 2, precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
-    { nombre: "Pañitos húmedos", especificacion: "Cualquier marca", modo: "multiple", cuposMax: null, precioMin: 20_000, precioMax: 45_000, nivelPrecio: "$",
+    { nombre: "Pañales talla 1", especificacion: "Etapa 1", modo: "multiple", precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
+    { nombre: "Pañales talla 2", especificacion: "Etapa 2", modo: "multiple", precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
+    { nombre: "Pañales talla 3", especificacion: "Etapa 3", modo: "multiple", precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
+    { nombre: "Pañales talla 4", especificacion: "Etapa 4", modo: "multiple", precioMin: 45_000, precioMax: 90_000, nivelPrecio: "$" },
+    { nombre: "Pañitos húmedos", especificacion: "Cualquier marca", modo: "multiple", precioMin: 20_000, precioMax: 45_000, nivelPrecio: "$",
       notaPapas: "Nunca sobran. Escógelo las veces que quieras." },
   ],
   bano: [
@@ -84,7 +82,7 @@ const REGALOS: Record<string, Semilla[]> = {
     { nombre: "Móvil", especificacion: "Para colgar sobre el espacio de colecho", modo: "unico", precioMin: 80_000, precioMax: 200_000, nivelPrecio: "$$",
       notaPapas: "Benjamín va a dormir en colecho, así que no necesita ser de cuna." },
     { nombre: "Sonajeros y mordedores", modo: "unico", precioMin: 30_000, precioMax: 80_000, nivelPrecio: "$" },
-    { nombre: "Libros con ilustraciones para bebés", especificacion: "Cartón o tela", modo: "multiple", cuposMax: null, precioMin: 30_000, precioMax: 90_000, nivelPrecio: "$",
+    { nombre: "Libros con ilustraciones para bebés", especificacion: "Cartón o tela", modo: "multiple", precioMin: 30_000, precioMax: 90_000, nivelPrecio: "$",
       notaPapas: "Tampoco sobran. Entre más, mejor." },
   ],
 };
@@ -119,8 +117,6 @@ async function main() {
       precioMax: r.precioMax,
       nivelPrecio: r.nivelPrecio,
       modo: r.modo,
-      cuposMax: r.cuposMax ?? null,
-      metaPersonas: r.metaPersonas ?? null,
       publicado: true,
       orden: orden++,
     })),

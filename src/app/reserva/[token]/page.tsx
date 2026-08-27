@@ -41,7 +41,6 @@ export default async function Comprobante({ params }: { params: Promise<{ token:
       estado: reservas.estado,
       creadoEn: reservas.creadoEn,
       regaloNombre: regalos.nombre,
-      regaloModo: regalos.modo,
     })
     .from(reservas)
     .innerJoin(regalos, eq(reservas.regaloId, regalos.id))
@@ -80,9 +79,6 @@ export default async function Comprobante({ params }: { params: Promise<{ token:
                     {f.regaloNombre}
                     {f.cantidad > 1 && ` · x${f.cantidad}`}
                   </span>
-                  {f.regaloModo === "grupo" && (
-                    <span className="block font-ui text-[12px] text-tinta-5">Entre varios</span>
-                  )}
                 </span>
                 <BotonCancelar id={f.id} nombre={f.regaloNombre} />
               </li>

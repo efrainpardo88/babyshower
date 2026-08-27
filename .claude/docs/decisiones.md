@@ -40,6 +40,23 @@ en la tarjeta. El código diverge del PNG **a propósito** en esa línea y solo 
 
 ---
 
+### La lista no dice quién reservó qué
+
+**Decidido el 26 de agosto de 2026 — Efraín.** Antes la tarjeta decía «Lo reservó Carolina».
+
+Ahora dice solo **«Ya lo reservaron»**. Y no es un cambio de texto: el nombre dejó de
+salir de la base. La consulta de `/lista` ya no lo trae, así que el nombre de cada
+invitado tampoco viaja al navegador de todos los demás.
+
+*Por qué:* saber que un regalo está tomado es información útil; saber quién lo tomó no le
+sirve a nadie para decidir, y en una lista que van a abrir treinta personas es exponer a
+cada invitado sin motivo.
+
+*Dónde sí se ve:* en el panel de administración. Los papás necesitan saber quién trae qué
+para agradecer — esa es justamente la razón de que el panel exista.
+
+---
+
 ### Confirmar asistencia es un enlace a WhatsApp
 
 No hay tabla de RSVP, ni formulario, ni lista de confirmados en el panel.
@@ -50,14 +67,31 @@ una tabla y un día de trabajo — pero no antes del 4 de septiembre.
 
 ---
 
-### Tres modos de reserva, no dos
+### Dos modos de reserva, no tres
 
-`unico` no alcanza: los pañales y los libros **no sobran nunca**, y los regalos grandes
-necesitan que varias personas se sumen. De ahí `multiple` (con o sin cupo) y `grupo`.
+**Revisado el 26 de agosto de 2026 — Efraín.** Antes había tres modos y cupos por regalo.
 
-Los cupos de pañales están repartidos a propósito: **talla RN solo 2**, porque se usa
-tres semanas. El grueso va a tallas 1 y 2. Ese reparto es la mitad de la solución al
-problema de los repetidos.
+Quedan dos:
+
+- `unico` — una persona lo reserva y sale de la lista.
+- `multiple` — sin tope, nunca se agota.
+
+*Qué se eliminó y por qué:*
+
+**El modo `grupo`**, que llevaba la cuenta de quiénes se apuntaban a un regalo caro y
+mostraba sus nombres. No hace falta: si un grupo se organiza para dar el coche, uno de
+ellos lo reserva y ya. Saber quiénes son los demás no le sirve a nadie dentro de la
+página, y se arregla por WhatsApp igual que el dinero. La **categoría** «Entre varios»
+se queda: agrupa los regalos caros, que es información útil.
+
+**Los cupos de `multiple`.** Antes los pañales tenían un reparto —talla RN solo 2, el
+grueso en tallas 1 y 2— pensado para evitar que llegaran seis paquetes de la misma
+talla. Ahora cualquiera puede llevar los que quiera de la talla que quiera.
+
+*El costo, dicho en voz alta:* ese reparto era la mitad de la solución al problema de
+los repetidos. Sin él, la única defensa que queda es que **cada ítem lleve la talla en
+el nombre**. Es un riesgo aceptado: la idea es que quien tenga poco presupuesto pueda
+traer algo pequeño y de mucho uso sin toparse con un cupo lleno.
 
 ---
 

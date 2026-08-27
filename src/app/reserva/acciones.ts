@@ -5,6 +5,7 @@ import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { reservas } from "@/lib/db/schema";
 import { reservarSeleccion, type ItemSolicitado, type Resultado } from "@/lib/reservar";
+import { enviarCorreoDeReserva } from "@/lib/correo";
 
 /**
  * La acción de servidor que ejecuta la reserva.
@@ -16,7 +17,7 @@ import { reservarSeleccion, type ItemSolicitado, type Resultado } from "@/lib/re
  */
 
 export type RespuestaReserva =
-  | { estado: "ok"; resultado: Resultado }
+  | { estado: "ok"; resultado: Resultado; correoEnviado: boolean }
   | { estado: "invalido"; mensaje: string }
   | { estado: "error"; mensaje: string };
 
@@ -63,7 +64,21 @@ export async function confirmarReserva(
     // La lista muestra estados que acaban de cambiar: hay que refrescarla.
     revalidatePath("/lista");
 
-    return { estado: "ok", resultado };
+    // El correo va DESPUÉS de que la reserva está guardada, y se espera en vez
+    // de dispararlo y olvidarlo: en serverless la función se congela al
+    // responder y el envío quedaría a medias. Si falla, la reserva sigue en pie
+    // y el invitado ya tiene el enlace en pantalla.
+    let correoEnviado = false;
+    if (resultado.lote && resultado.confirmados.length > 0) {
+      correoEnviado = await enviarCorreoDeReserva({
+        para: email,
+        nombre,
+        lote: resultado.lote,
+        regalos: resultado.confirmados.map((c) => ({ nombre: c.nombre, cantidad: c.cantidad })),
+      });
+    }
+
+    return { estado: "ok", resultado, correoEnviado };
   } catch (e) {
     console.error("Falló la reserva:", e);
     return {

@@ -10,12 +10,14 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env.local src/lib/db/seed.ts",
-    "prueba:reservas": "tsx --env-file=.env.local scripts/prueba-reservas.ts"
+    "prueba:reservas": "tsx --env-file=.env.local scripts/prueba-reservas.ts",
+    "prueba:correo": "tsx --env-file=.env.local scripts/prueba-correo.ts"
   },
   "dependencies": {
     "drizzle-orm": "^0.45.2",
     "next": "16.3.2",
     "next-auth": "^5.0.0-beta.32",
+    "nodemailer": "^8.0.11",
     "postgres": "^3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8"
@@ -23,6 +25,7 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/nodemailer": "^8.0.1",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "dotenv": "^17.4.2",

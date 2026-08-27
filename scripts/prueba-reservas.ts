@@ -1,6 +1,10 @@
 /**
  * Prueba de concurrencia contra la base real.
  * Se corre con:  npm run prueba:reservas
+ *
+ * Es la única verificación automática del núcleo del proyecto: que dos invitados
+ * no se lleven el mismo regalo. Usa correos `@prueba.local` y limpia lo suyo al
+ * empezar y al terminar, así que no toca reservas de invitados de verdad.
  */
 import { reservarSeleccion } from "../src/lib/reservar";
 import { db } from "../src/lib/db";
@@ -37,28 +41,44 @@ async function main() {
   afirmar(ganadores === 1, `exactamente UNO se lo lleva (fueron ${ganadores})`);
   afirmar(perdedores === 1, `exactamente UNO recibe la caída (fueron ${perdedores})`);
   const perdedor = [a, b].find((r) => r.caidos.length === 1);
-  afirmar(perdedor?.caidos[0].motivo === "ya-reservado", `el motivo es 'ya-reservado'`);
+  afirmar(perdedor?.caidos[0].motivo === "ya-reservado", "el motivo es 'ya-reservado'");
   afirmar(
     (perdedor?.caidos[0].quedanEnCategoria ?? 0) > 0,
     `se le ofrece salida: quedan ${perdedor?.caidos[0].quedanEnCategoria} en «${perdedor?.caidos[0].categoriaNombre}»`,
   );
 
-  // ---- 2 · Cupos: cinco personas para 'Pañales talla 4', que tiene 2 ----
-  console.log("\n2 · Cinco invitados para un 'multiple' con 2 cupos");
-  const cinco = await Promise.all(
-    ["C1", "C2", "C3", "C4", "C5"].map((n) =>
-      reservarSeleccion([{ slug: "panales-talla-4-etapa-4", cantidad: 1 }], inv(n)),
-    ),
-  );
-  const entraron = cinco.filter((r) => r.confirmados.length === 1).length;
-  afirmar(entraron === 2, `entran exactamente 2 (entraron ${entraron})`);
+  // ---- 2 · Los caros son 'unico' como cualquier otro ----
+  console.log("\n2 · Un regalo caro ('Entre varios') se comporta como único");
+  const [c1, c2] = await Promise.all([
+    reservarSeleccion([{ slug: "silla-de-carro-grupo-0-nueva-nunca-usada", cantidad: 1 }], inv("C1")),
+    reservarSeleccion([{ slug: "silla-de-carro-grupo-0-nueva-nunca-usada", cantidad: 1 }], inv("C2")),
+  ]);
   afirmar(
-    cinco.filter((r) => r.caidos[0]?.motivo === "sin-cupos").length === 3,
-    "los otros 3 caen por 'sin-cupos'",
+    [c1, c2].filter((r) => r.confirmados.length === 1).length === 1,
+    "solo uno del grupo lo reserva y sale de la lista",
   );
 
-  // ---- 3 · Éxito parcial: uno bueno + uno ya tomado ----
-  console.log("\n3 · Éxito parcial — el «Reservamos 2 de 3» del diseño");
+  // ---- 3 · Los repetibles NO tienen tope ----
+  console.log("\n3 · Un 'multiple' admite a todos: ya no hay cupos");
+  const seis = await Promise.all(
+    ["R1", "R2", "R3", "R4", "R5", "R6"].map((n) =>
+      reservarSeleccion([{ slug: "panales-talla-recien-nacido-talla-rn", cantidad: 1 }], inv(n)),
+    ),
+  );
+  const entraron = seis.filter((r) => r.confirmados.length === 1).length;
+  afirmar(entraron === 6, `entran los 6 (entraron ${entraron})`);
+  afirmar(seis.every((r) => r.caidos.length === 0), "ninguno se cae por cupos");
+
+  // ---- 4 · Cantidad libre en un repetible ----
+  console.log("\n4 · Se puede llevar varias unidades de un repetible");
+  const varias = await reservarSeleccion(
+    [{ slug: "panitos-humedos-cualquier-marca", cantidad: 5 }],
+    inv("Multi"),
+  );
+  afirmar(varias.confirmados[0]?.cantidad === 5, "se registran las 5 unidades pedidas");
+
+  // ---- 5 · Éxito parcial: uno bueno + uno ya tomado ----
+  console.log("\n5 · Éxito parcial — el «Reservamos 2 de 3» del diseño");
   const parcial = await reservarSeleccion(
     [
       { slug: "banera-con-soporte", cantidad: 1 }, // ya lo tomó alguien en 1
@@ -71,25 +91,22 @@ async function main() {
   afirmar(parcial.caidos.length === 1, `1 caído (fueron ${parcial.caidos.length})`);
   afirmar(parcial.lote !== null, "se emite un lote: hay comprobante que mostrar");
 
-  // ---- 4 · Grupo: varios sí, pero el mismo no dos veces ----
-  console.log("\n4 · 'grupo' admite varios, pero no al mismo dos veces");
-  const g1 = await reservarSeleccion([{ slug: "silla-de-carro-grupo-0-nueva-nunca-usada", cantidad: 1 }], inv("G1"));
-  const g2 = await reservarSeleccion([{ slug: "silla-de-carro-grupo-0-nueva-nunca-usada", cantidad: 1 }], inv("G2"));
-  const g1bis = await reservarSeleccion([{ slug: "silla-de-carro-grupo-0-nueva-nunca-usada", cantidad: 1 }], inv("G1"));
-  afirmar(g1.confirmados.length === 1 && g2.confirmados.length === 1, "dos personas distintas se apuntan");
-  afirmar(g2.confirmados[0]?.acompanantes.includes("G1"), "al segundo se le dice con quién comparte");
-  afirmar(g1bis.caidos[0]?.motivo === "ya-te-apuntaste", "el repetido se rechaza");
-
-  // ---- 5 · Interbloqueo: dos pedidos cruzados a la vez ----
-  console.log("\n5 · Pedidos cruzados — si hubiera interbloqueo, esto se cuelga");
+  // ---- 6 · Interbloqueo: dos pedidos cruzados a la vez ----
+  console.log("\n6 · Pedidos cruzados — si hubiera interbloqueo, esto se cuelga");
   const cruz = await Promise.race([
     Promise.all([
       reservarSeleccion(
-        [{ slug: "kit-de-cuidado-cortaunas-aspirador-nasal-y-cepillo", cantidad: 1 }, { slug: "movil-para-colgar-sobre-el-espacio-de-colecho", cantidad: 1 }],
+        [
+          { slug: "kit-de-cuidado-cortaunas-aspirador-nasal-y-cepillo", cantidad: 1 },
+          { slug: "movil-para-colgar-sobre-el-espacio-de-colecho", cantidad: 1 },
+        ],
         inv("X1"),
       ),
       reservarSeleccion(
-        [{ slug: "movil-para-colgar-sobre-el-espacio-de-colecho", cantidad: 1 }, { slug: "kit-de-cuidado-cortaunas-aspirador-nasal-y-cepillo", cantidad: 1 }],
+        [
+          { slug: "movil-para-colgar-sobre-el-espacio-de-colecho", cantidad: 1 },
+          { slug: "kit-de-cuidado-cortaunas-aspirador-nasal-y-cepillo", cantidad: 1 },
+        ],
         inv("X2"),
       ),
     ]),

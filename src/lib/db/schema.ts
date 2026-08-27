@@ -3,8 +3,22 @@ import {
 } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 
-/** Cómo se puede reservar un regalo. Lo decide el admin, regalo por regalo. */
-export const modoReserva = pgEnum("modo_reserva", ["unico", "multiple", "grupo"]);
+/**
+ * Cómo se puede reservar un regalo. Solo hay dos formas, y es a propósito:
+ *
+ *  · `unico`    — una persona lo reserva y sale de circulación. Aquí entran
+ *                 también los regalos caros: si un grupo se organiza para dar
+ *                 el coche, uno de ellos lo reserva y ya. La página no registra
+ *                 quiénes son los demás; eso lo arreglan por fuera.
+ *  · `multiple` — se puede reservar cuantas veces se quiera, sin tope. Pañales,
+ *                 pañitos, libros: cosas de bajo presupuesto que se usan mucho
+ *                 y de las que nunca sobra.
+ *
+ * El 26/08/2026 se eliminó un tercer modo, `grupo`, que llevaba la cuenta de
+ * quiénes se apuntaban a un mismo regalo, y también los cupos de `multiple`.
+ * Ver .claude/docs/decisiones.md.
+ */
+export const modoReserva = pgEnum("modo_reserva", ["unico", "multiple"]);
 
 /**
  * Respaldo y agrupación. Desde el 25/08/2026 el invitado ve el rango real
@@ -52,10 +66,6 @@ export const regalos = pgTable(
     nivelPrecio: nivelPrecio("nivel_precio").notNull().default("$$"),
 
     modo: modoReserva("modo").notNull().default("unico"),
-    /** Solo modo 'multiple'. null = sin límite (pañitos, libros). */
-    cuposMax: integer("cupos_max"),
-    /** Solo modo 'grupo'. Cuántas personas esperamos que se apunten. */
-    metaPersonas: integer("meta_personas"),
 
     prioridad: prioridad("prioridad").notNull().default("media"),
     publicado: boolean("publicado").notNull().default(false),

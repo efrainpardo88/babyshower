@@ -16,6 +16,8 @@ import ln4l from "../../public/img/ln-4-l.png";
 import ln4r from "../../public/img/ln-4-r.png";
 import { Corazon, Divisor } from "@/components/ilustraciones";
 import { CuentaRegresiva } from "@/components/cuenta-regresiva";
+import { BotonAsistencia } from "@/components/boton-asistencia";
+import { ENLACE_WHATSAPP } from "@/lib/whatsapp";
 
 /**
  * Landing — construida contra `.claude/docs/diseno/LandingDesktopNew.png` (versión final).
@@ -39,8 +41,6 @@ import { CuentaRegresiva } from "@/components/cuenta-regresiva";
  */
 
 const FECHA = process.env.NEXT_PUBLIC_FECHA_EVENTO ?? "2026-09-13T15:00:00-05:00";
-const WHATSAPP = process.env.NEXT_PUBLIC_WHATSAPP ?? "573000000000";
-const MENSAJE = encodeURIComponent("¡Hola! Confirmo mi asistencia al baby shower de Benjamín 🧸");
 
 /** El menú sigue el orden de las secciones en la página, no el del mockup. */
 const NAV = [
@@ -401,7 +401,7 @@ export default function Home() {
               ¡Nos encantaría contar contigo!
             </p>
             <a
-              href={`https://wa.me/${WHATSAPP}?text=${MENSAJE}`}
+              href={ENLACE_WHATSAPP}
               target="_blank"
               rel="noopener noreferrer"
               className="caps mt-1 inline-flex h-12 items-center justify-center gap-3 rounded-full border-[1.5px] border-[#E1C8B1] bg-papel px-7 text-[12px] font-bold text-tinta-3 no-underline transition-colors hover:bg-[#F3E8D6] sm:h-[clamp(48px,3.4vw,64px)] sm:px-[clamp(28px,2vw,40px)] sm:text-[clamp(13px,0.93vw,18px)]"
@@ -448,6 +448,10 @@ export default function Home() {
           <Corazon className="h-3.5 w-3.5 text-azul-lazo" />
         </div>
       </footer>
+
+      {/* Flota sobre todo: confirmar es lo que más se olvida cuando alguien
+          entró solo a mirar. */}
+      <BotonAsistencia clase="bottom-5 right-5 sm:bottom-7 sm:right-7" />
     </main>
   );
 }

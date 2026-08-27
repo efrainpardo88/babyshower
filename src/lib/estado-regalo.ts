@@ -10,65 +10,52 @@
  * Que aquí diga «disponible» no autoriza nada.
  */
 
-/** Una reserva activa, con lo mínimo para contar y para decir quién fue. */
+/**
+ * Una reserva activa. Solo la cantidad: quién reservó NO se manda al navegador.
+ *
+ * Antes la tarjeta decía «Lo reservó Carolina», así que el nombre de cada
+ * invitado viajaba a la máquina de todos los demás. Se quitó el 26/08/2026 —
+ * ver .claude/docs/decisiones.md.
+ */
 export type ReservaActiva = {
-  nombre: string;
   cantidad: number;
 };
 
 export type RegaloParaEstado = {
-  modo: "unico" | "multiple" | "grupo";
-  /** Solo 'multiple'. null = sin límite (pañitos, libros). */
-  cuposMax: number | null;
-  /** Solo 'grupo'. Cuántas personas esperamos que se apunten. */
-  metaPersonas: number | null;
+  modo: "unico" | "multiple";
   reservas: ReservaActiva[];
 };
 
 /**
- * Los cinco estados que puede tener un regalo en el servidor.
- * El sexto de `.claude/docs/diseno/EstadosTarjeta.png` («En tu selección») no está aquí:
- * es del navegador de cada invitado, se superpone y no cambia lo que otros ven.
+ * Los tres estados que puede tener un regalo en el servidor.
+ *
+ * El cuarto de la tarjeta («En tu selección») no está aquí: es del navegador de
+ * cada invitado, se superpone y no cambia lo que otros ven.
+ *
+ * El 26/08/2026 desaparecieron dos estados: `grupo` (que llevaba la cuenta de
+ * quiénes se apuntaban) y `cupos` (el «2 de 5»). Los repetibles ya no tienen
+ * tope, así que nunca se agotan.
  */
 export type EstadoRegalo =
   | { tipo: "disponible" }
-  | { tipo: "reservado"; porQuien: string | null; motivo: "unico" | "sin-cupos" }
-  | { tipo: "cupos"; tomados: number; total: number }
-  | { tipo: "sin-limite"; tomados: number }
-  | { tipo: "grupo"; apuntados: string[]; meta: number | null };
+  | { tipo: "reservado" }
+  | { tipo: "sin-limite"; tomados: number };
 
-/** Los cupos los consume la cantidad, no el número de reservas: uno puede llevar dos. */
+/** Los repetibles cuentan por cantidad: uno puede llevar dos paquetes. */
 function contarCupos(reservas: ReservaActiva[]): number {
   return reservas.reduce((suma, r) => suma + Math.max(1, r.cantidad), 0);
 }
 
 export function calcularEstado(regalo: RegaloParaEstado): EstadoRegalo {
-  const { modo, cuposMax, metaPersonas, reservas } = regalo;
-
-  if (modo === "grupo") {
-    return {
-      tipo: "grupo",
-      apuntados: reservas.map((r) => r.nombre),
-      meta: metaPersonas,
-    };
-  }
+  const { modo, reservas } = regalo;
 
   if (modo === "multiple") {
-    const tomados = contarCupos(reservas);
-    if (cuposMax == null) return { tipo: "sin-limite", tomados };
-    if (tomados >= cuposMax) {
-      // Se llenó. Se pinta como reservado — gris y atenuado — pero el texto
-      // dice otra cosa: «Ya no quedan cupos», no «Ya lo reservaron».
-      return { tipo: "reservado", porQuien: null, motivo: "sin-cupos" };
-    }
-    return { tipo: "cupos", tomados, total: cuposMax };
+    // Sin tope: el contador es informativo, para que nadie sienta que llegó
+    // tarde. Nunca se agota.
+    return { tipo: "sin-limite", tomados: contarCupos(reservas) };
   }
 
-  const primera = reservas[0];
-  if (primera) {
-    return { tipo: "reservado", porQuien: primera.nombre, motivo: "unico" };
-  }
-  return { tipo: "disponible" };
+  return reservas.length > 0 ? { tipo: "reservado" } : { tipo: "disponible" };
 }
 
 /** Si el invitado todavía puede sumarlo a su selección. */

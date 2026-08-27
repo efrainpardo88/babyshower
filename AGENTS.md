@@ -33,9 +33,14 @@ Cada regalo tiene un `modo` que define cómo se puede reservar:
 
 | Modo | Qué hace | Ejemplos |
 |---|---|---|
-| `unico` | Una persona lo reserva y sale de circulación | Bañera, pañalera, mantas |
-| `multiple` | Se puede reservar varias veces. `cuposMax` limita; `null` = sin límite | Pañales por talla (5 cupos), pañitos y libros (sin límite) |
-| `grupo` | Varias personas se apuntan al mismo regalo | Silla de carro, coche, monitor |
+| `unico` | Una persona lo reserva y **sale de la lista**. Nadie más trae ese regalo | Bañera, pañalera, mantas, y también los caros: silla de carro, coche, monitor |
+| `multiple` | Se puede reservar cuantas veces se quiera, **sin tope**. Nunca se agota | Pañales por talla, pañitos, libros |
+
+**Solo hay dos modos, y es a propósito.** El 26/08/2026 se eliminó un tercero,
+`grupo`, que llevaba la cuenta de quiénes se apuntaban a un mismo regalo, y también
+los cupos de `multiple`. Los regalos caros siguen agrupados en la **categoría**
+«Entre varios» —eso no cambió— pero si un grupo se organiza para dar el coche,
+uno de ellos lo reserva y la página no registra quiénes son los demás.
 
 **La página NUNCA maneja dinero.** En los regalos de grupo solo muestra quiénes se apuntaron
 y cómo contactarlos; el recaudo lo resuelven ellos por fuera. No integrar pasarelas de pago.
@@ -49,7 +54,7 @@ cuando un regalo no tiene rango cargado, y para agrupar en el panel.
 El rango siempre se arma con `formatearRango()` de `src/lib/precio.ts`; no formatear cifras a mano.
 
 **Todo ítem lleva talla o cantidad explícita en el nombre.** «Pañales talla 2», no «pañales».
-Esta regla sola evita la mayoría de los repetidos.
+Desde que se quitaron los cupos, esta regla es la ÚNICA defensa contra los repetidos.
 
 **Confirmar asistencia = enlace a WhatsApp.** No hay tabla de RSVP ni formulario. Es deliberado.
 
@@ -84,7 +89,7 @@ Viene de la invitación impresa que ya se envió a los invitados. No inventar un
 - Las fuentes las **autoaloja Next** (`next/font/google`): se descargan en el build y se sirven desde el mismo dominio. No hay peticiones a Google desde el navegador; no agregar `<link>` a `fonts.googleapis.com`.
 - **Las versalitas espaciadas** (`.caps`) son lo que le da el aire de invitación impresa. Usarlas para toda etiqueta.
 - **Colores**: definidos en `src/app/globals.css` bajo `@theme`. **No inventar colores nuevos**; derivar de los que hay.
-- **El color codifica estado**: azul = disponible/acción · salvia = se puede escoger varias veces · pardo = entre varios · gris cálido = reservado
+- **El color codifica estado**: azul = disponible/acción · salvia = repetible · gris cálido = reservado
 - **El estado se lee por color Y por texto**, nunca solo por color.
 - **El oso pardo es la marca**: «Pardo» es el apellido de la familia. No cambiarlo por otro animal.
 
@@ -134,8 +139,13 @@ SVG se borra en `.claude/docs/diseno/remove-svg.png`. Ambos explicados en `.clau
 ## Flujo del invitado
 
 Explora → agrega al panel lateral (`localStorage`) → **un solo formulario** al final
-(nombre, correo, teléfono y mensaje opcionales) → recibe enlace con token.
-Escribe su nombre una vez, no cinco. No se crea cuenta.
+(nombre y correo obligatorios; teléfono y mensaje opcionales) → recibe el enlace con
+el token en pantalla **y por correo**. Escribe su nombre una vez, no cinco. No se crea cuenta.
+
+El correo sale por el Gmail personal de Efraín (`src/lib/correo.ts`), que no necesita
+dominio propio. **Un fallo del correo nunca tumba una reserva**: se envía después de
+guardarla y el módulo devuelve un booleano en vez de lanzar. El comprobante solo dice
+«también te lo mandamos» si el envío salió de verdad.
 
 ## Empezar
 

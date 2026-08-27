@@ -27,7 +27,7 @@ import { confirmarReserva } from "@/app/reserva/acciones";
 type Estado =
   | { paso: "formulario" }
   | { paso: "enviando" }
-  | { paso: "listo"; resultado: Resultado }
+  | { paso: "listo"; resultado: Resultado; correoEnviado: boolean }
   | { paso: "error"; mensaje: string };
 
 function Campo({
@@ -108,7 +108,11 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
     // Lo que quedó reservado ya no es una selección pendiente. Lo que se cayó
     // tampoco: el invitado tendrá que escoger otra cosa, no reintentar lo mismo.
     limpiar();
-    setEstado({ paso: "listo", resultado: respuesta.resultado });
+    setEstado({
+      paso: "listo",
+      resultado: respuesta.resultado,
+      correoEnviado: respuesta.correoEnviado,
+    });
   }
 
   /* ---------------- 2 y 3 · La respuesta ---------------- */
@@ -168,11 +172,6 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
                   {c.nombre}
                   {c.cantidad > 1 && ` · x${c.cantidad}`}
                 </span>
-                {c.modo === "grupo" && c.acompanantes.length > 0 && (
-                  <span className="block font-ui text-[12px] text-tinta-5">
-                    Con {c.acompanantes.join(", ")}
-                  </span>
-                )}
               </span>
             </li>
           ))}
@@ -184,11 +183,7 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
               <span className="min-w-0">
                 <span className="block font-serif text-[16px] font-bold text-gris-texto">{c.nombre}</span>
                 <span className="block font-ui text-[12px] text-tinta-5">
-                  {c.motivo === "sin-cupos"
-                    ? "Se llenaron los cupos hace un momento"
-                    : c.motivo === "ya-te-apuntaste"
-                      ? "Ya estabas apuntado a este"
-                      : "La reservó otra persona hace un momento"}
+                  La reservó otra persona hace un momento
                 </span>
               </span>
             </li>
@@ -207,6 +202,9 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
             </Link>
             <p className="mt-2.5 mb-0 font-ui text-[12px] leading-relaxed text-tinta-4">
               Desde ahí puedes cambiar o cancelar cuando quieras.
+              {estado.correoEnviado
+                ? ` También te lo mandamos a ${email}.`
+                : " Cópialo o guarda esta página."}
             </p>
           </div>
         )}
@@ -317,7 +315,7 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
                 {regalo.nombre}
               </span>
               <span className="shrink-0 font-ui text-[12px] text-tinta-5">
-                {regalo.modo === "grupo" ? "Entre varios" : `x${cantidad}`}
+                {`x${cantidad}`}
               </span>
             </li>
           ))}

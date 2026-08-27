@@ -22,6 +22,7 @@ import { calcularEstado, sePuedeEscoger } from "@/lib/estado-regalo";
 import { formatearRangoCorto, sumarRangos } from "@/lib/precio";
 import type { CategoriaConCuenta, RegaloDeLista } from "@/lib/regalos";
 import { cambiarCantidad, escoger, quitar, useSeleccion } from "@/lib/seleccion";
+import { BotonAsistencia } from "@/components/boton-asistencia";
 
 /* ------------------------------------------------------------------ */
 
@@ -62,14 +63,9 @@ function RenglonSeleccion({
   onCantidad: (n: number) => void;
   onQuitar: () => void;
 }) {
-  const estado = calcularEstado(regalo);
-  // Solo los 'multiple' admiten llevar más de uno, y nunca más de lo que queda.
-  const tope =
-    regalo.modo === "multiple"
-      ? regalo.cuposMax == null
-        ? 20
-        : Math.max(1, regalo.cuposMax - (estado.tipo === "cupos" ? estado.tomados : 0))
-      : 1;
+  // Los repetibles no tienen tope. El 20 no es una regla del negocio: es un
+  // límite de cordura para que nadie escriba 900 en el formulario.
+  const tope = regalo.modo === "multiple" ? 20 : 1;
 
   return (
     <li className="flex items-center gap-3 rounded-2xl border border-linea bg-papel p-2.5">
@@ -174,14 +170,36 @@ export function ListaRegalos({
       {/* ---------------- ENCABEZADO ---------------- */}
       <header className="sticky top-0 z-30 border-b border-linea bg-crema/95 backdrop-blur">
         <div className="mx-auto flex max-w-[1400px] items-center justify-between gap-4 px-5 py-3 sm:px-8">
-          <Link href="/" className="flex items-center gap-2.5 no-underline">
-            <span className="text-[#B08D6A]">
-              <Corazon className="h-5 w-5" />
-            </span>
-            <span className="font-serif text-[17px] font-bold text-tinta sm:text-[20px]">
-              La lista de Benjamín
-            </span>
-          </Link>
+          <div className="flex min-w-0 items-center gap-2.5">
+            {/* Salida explícita: el título ya llevaba al inicio, pero nadie
+                asume que un título sea un enlace. */}
+            <Link
+              href="/"
+              aria-label="Volver a la invitación"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-linea-fuerte bg-papel text-tinta-3 no-underline transition hover:bg-crema"
+            >
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={2}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <path d="M15 5 8 12l7 7" />
+              </svg>
+            </Link>
+            <Link href="/" className="flex min-w-0 items-center gap-2.5 no-underline">
+              <span className="hidden text-[#B08D6A] sm:block">
+                <Corazon className="h-5 w-5" />
+              </span>
+              <span className="truncate font-serif text-[17px] font-bold text-tinta sm:text-[20px]">
+                La lista de Benjamín
+              </span>
+            </Link>
+          </div>
 
           <div className="flex items-center gap-3">
             <button
@@ -300,6 +318,12 @@ export function ListaRegalos({
           )}
         </aside>
       </div>
+
+      {/* Se sube cuando aparece la barra de selección en móvil, o quedaría
+          justo encima de «Revisar». */}
+      <BotonAsistencia
+        clase={`right-5 sm:right-7 ${cuantos > 0 ? "bottom-24 lg:bottom-7" : "bottom-5 sm:bottom-7"}`}
+      />
 
       {/* ---------------- BARRA FIJA EN MÓVIL ---------------- */}
       {cuantos > 0 && !panelAbierto && (

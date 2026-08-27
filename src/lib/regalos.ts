@@ -45,8 +45,6 @@ export async function cargarLista(): Promise<Lista> {
       precioMax: regalos.precioMax,
       nivelPrecio: regalos.nivelPrecio,
       modo: regalos.modo,
-      cuposMax: regalos.cuposMax,
-      metaPersonas: regalos.metaPersonas,
       categoriaSlug: categorias.slug,
       categoriaNombre: categorias.nombre,
       categoriaOrden: categorias.orden,
@@ -57,24 +55,22 @@ export async function cargarLista(): Promise<Lista> {
     .orderBy(asc(categorias.orden), asc(regalos.orden));
 
   // Solo las activas: una reserva cancelada libera el cupo y no debe contarse.
+  // Sin `nombre`: quién reservó no le importa a la lista y no tiene por qué
+  // salir de la base hacia el navegador de todos los invitados.
   const activas = await db
-    .select({
-      regaloId: reservas.regaloId,
-      nombre: reservas.nombre,
-      cantidad: reservas.cantidad,
-    })
+    .select({ regaloId: reservas.regaloId, cantidad: reservas.cantidad })
     .from(reservas)
     .where(eq(reservas.estado, "activa"));
 
   const ids = await db.select({ id: regalos.id, slug: regalos.slug }).from(regalos);
   const slugPorId = new Map(ids.map((r) => [r.id, r.slug]));
 
-  const porSlug = new Map<string, { nombre: string; cantidad: number }[]>();
+  const porSlug = new Map<string, { cantidad: number }[]>();
   for (const r of activas) {
     const slug = slugPorId.get(r.regaloId);
     if (!slug) continue;
     const lista = porSlug.get(slug) ?? [];
-    lista.push({ nombre: r.nombre, cantidad: r.cantidad });
+    lista.push({ cantidad: r.cantidad });
     porSlug.set(slug, lista);
   }
 
@@ -89,8 +85,6 @@ export async function cargarLista(): Promise<Lista> {
     precioMax: f.precioMax,
     nivelPrecio: f.nivelPrecio,
     modo: f.modo,
-    cuposMax: f.cuposMax,
-    metaPersonas: f.metaPersonas,
     reservas: porSlug.get(f.slug) ?? [],
   }));
 
