@@ -1,0 +1,59 @@
+# Lo que se revisa en cada cambio, antes y además de que Vercel construya.
+#
+# Vercel ya corre TypeScript al construir y NO despliega si falla, así que
+# producción está protegida contra errores de tipos. Lo que aquí se agrega es
+# lo que Vercel NO mira:
+#
+#   · `lint`, que Next dejó de ejecutar durante el build.
+#   · La prueba de concurrencia, que es la única verificación automática de la
+#     garantía del proyecto: que dos invitados no se lleven el mismo regalo.
+#
+# La prueba corre contra una RAMA DE NEON, no contra producción. Crea y borra
+# reservas sobre regalos reales; hacerlo en la base viva podría cruzarse con un
+# invitado escogiendo de verdad.
+
+name: Verificar
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Si se sube otro commit mientras este corre, se cancela el anterior: no tiene
+# sentido gastar minutos verificando código que ya quedó viejo.
+concurrency:
+  group: verificar-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  revisar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Concurrencia de reservas
+        # Sin el secreto configurado se salta con un aviso, en vez de fallar:
+        # así el workflow sigue sirviendo aunque alguien clone el repo.
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL_PRUEBAS }}
+        run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "::warning::Sin DATABASE_URL_PRUEBAS. Se salta la prueba de concurrencia."
+            exit 0
+          fi
+          npx tsx scripts/prueba-reservas.ts
