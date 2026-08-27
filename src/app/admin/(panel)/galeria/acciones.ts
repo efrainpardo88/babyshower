@@ -91,3 +91,36 @@ export async function moverFoto(id: string, direccion: "arriba" | "abajo"): Prom
   refrescar();
   return { ok: true };
 }
+
+/**
+ * Manda una foto al primer puesto.
+ *
+ * Existe porque con 47 fotos las flechas no alcanzan: llevar la del puesto 40
+ * al principio serían 39 clics. Esto es lo que de verdad se quiere hacer cuando
+ * uno mira la portada y piensa «esta debería salir primero».
+ *
+ * Se resuelve en DOS sentencias y no reescribiendo los 47 órdenes uno por uno:
+ * cada `update` suelto es un viaje a Neon, y 47 viajes son segundos de espera.
+ * Correr el bloque de arriba en una sola sentencia conserva el orden relativo
+ * de las demás, que es justo lo que se espera.
+ */
+export async function destacarFoto(id: string): Promise<Respuesta> {
+  const noPuede = await exigirAdmin();
+  if (noPuede) return { ok: false, mensaje: noPuede };
+
+  await db.transaction(async (tx) => {
+    const [foto] = await tx
+      .select({ orden: fotosGaleria.orden })
+      .from(fotosGaleria)
+      .where(eq(fotosGaleria.id, id));
+    if (!foto) return;
+
+    await tx.execute(
+      sql`update ${fotosGaleria} set orden = orden + 1 where orden < ${foto.orden}`,
+    );
+    await tx.update(fotosGaleria).set({ orden: 1 }).where(eq(fotosGaleria.id, id));
+  });
+
+  refrescar();
+  return { ok: true };
+}

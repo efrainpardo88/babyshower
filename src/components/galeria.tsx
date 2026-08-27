@@ -19,11 +19,16 @@
  * galería de seis fotos, toparse con una pared es más raro que seguir de largo.
  */
 
+import Image from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useScrollBloqueado } from "@/lib/bloquear-scroll";
+import { EN_LA_PORTADA } from "@/lib/galeria";
 
 export type FotoGaleria = {
+  /** Para el `alt` y el lector de pantalla. Siempre hay uno. */
   titulo: string;
+  /** El pie visible. Solo si los papás le escribieron descripción de verdad. */
+  pie?: string;
   /** La inclinación de la polaroid. Decorativa. */
   rot: string;
   /** Color de relleno mientras no haya foto de verdad. */
@@ -33,6 +38,8 @@ export type FotoGaleria = {
 
 /** Menos que esto es un toque tembloroso, no un deslizamiento. */
 const MINIMO_DESLIZ = 45;
+
+/* Cuántas se ven en la tira: `EN_LA_PORTADA`, compartido con el panel. */
 
 /* ------------------------------------------------------------------ */
 
@@ -63,11 +70,19 @@ function MarcadorSinFoto({ titulo }: { titulo: string }) {
 function Polaroid({ foto, onAbrir }: { foto: FotoGaleria; onAbrir?: () => void }) {
   const marco = (
     <div
-      className={`${foto.url ? "" : foto.tinte} flex h-[112px] w-[92px] flex-col items-center justify-center gap-1.5 overflow-hidden text-tinta/30 sm:h-[clamp(164px,11.7vw,220px)] sm:w-[clamp(136px,9.7vw,182px)]`}
+      className={`${foto.url ? "" : foto.tinte} relative flex h-[112px] w-[92px] flex-col items-center justify-center gap-1.5 overflow-hidden text-tinta/30 sm:h-[clamp(164px,11.7vw,220px)] sm:w-[clamp(136px,9.7vw,182px)]`}
     >
       {foto.url ? (
-        // eslint-disable-next-line @next/next/no-img-element -- la URL viene de la base, no del build
-        <img src={foto.url} alt={foto.titulo} className="h-full w-full object-cover" />
+        /* `next/image` y no un `img` suelto: la polaroid mide 92px pero el
+           archivo son 2400px y hasta 700 KB. Con 47 fotos eso serían 20 MB en
+           la landing. Así Next sirve una miniatura del tamaño real que se ve. */
+        <Image
+          src={foto.url}
+          alt={foto.titulo}
+          fill
+          sizes="(min-width: 640px) 182px, 92px"
+          className="object-cover"
+        />
       ) : (
         <MarcadorSinFoto titulo={foto.titulo} />
       )}
@@ -169,7 +184,8 @@ function Visor({
   useEffect(() => {
     for (const paso of [-1, 1]) {
       const vecina = fotos[(indice + paso + fotos.length) % fotos.length];
-      if (vecina?.url) new Image().src = vecina.url;
+      // `window.Image` y no `Image`: aquí ese nombre es el componente de Next.
+      if (vecina?.url) new window.Image().src = vecina.url;
     }
   }, [indice, fotos]);
 
@@ -214,7 +230,9 @@ function Visor({
           />
         )}
         <figcaption className="flex flex-col items-center gap-1 text-center">
-          <span className="caps text-[11px] !text-papel">{foto.titulo}</span>
+          {/* Sin descripción no se pinta nada: repetir «Benjamín» debajo de las
+              47 fotos no le dice nada a nadie. */}
+          {foto.pie && <span className="caps text-[11px] !text-papel">{foto.pie}</span>}
           {!sola && (
             <span className="font-ui text-[12px] tabular-nums text-papel/60">
               {indice + 1} / {fotos.length}
@@ -258,11 +276,13 @@ export function Galeria({ fotos }: { fotos: FotoGaleria[] }) {
    * la landing muestra marcadores de color y no hay nada que abrir.
    */
   const reales = fotos.filter((f) => f.url);
+  const enLaTira = fotos.slice(0, EN_LA_PORTADA);
+  const ocultas = reales.length - enLaTira.filter((f) => f.url).length;
 
   return (
     <>
       <div className="mt-5 flex flex-wrap items-center justify-center pl-2 lg:justify-start">
-        {fotos.map((f, i) => (
+        {enLaTira.map((f, i) => (
           <Polaroid
             key={`${f.titulo}-${i}`}
             foto={f}
@@ -270,6 +290,16 @@ export function Galeria({ fotos }: { fotos: FotoGaleria[] }) {
           />
         ))}
       </div>
+
+      {ocultas > 0 && (
+        <button
+          type="button"
+          onClick={() => setAbierta(0)}
+          className="caps mt-4 inline-flex h-12 items-center justify-center gap-2 rounded-full border-[1.5px] border-[#E1C8B1] bg-[#FCF7EE] px-6 text-[11px] font-bold text-tinta-3 transition-colors hover:bg-[#F3E8D6]"
+        >
+          Ver las {reales.length} fotos
+        </button>
+      )}
 
       {abierta !== null && reales[abierta] && (
         <Visor

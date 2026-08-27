@@ -8,7 +8,8 @@
  */
 
 import { useState, useTransition } from "react";
-import { borrarFoto, moverFoto, subirFoto } from "@/app/admin/(panel)/galeria/acciones";
+import { borrarFoto, destacarFoto, moverFoto, subirFoto } from "@/app/admin/(panel)/galeria/acciones";
+import { EN_LA_PORTADA } from "@/lib/galeria";
 import { prepararImagen } from "@/lib/reducir-imagen";
 
 export type Foto = {
@@ -58,7 +59,7 @@ export function AdminGaleria({ fotos }: { fotos: Foto[] }) {
           <p className="mt-1.5 mb-0 font-ui text-[13px] text-tinta-5">
             {fotos.length === 0
               ? "Sin fotos todavía. La landing muestra marcadores de color mientras tanto."
-              : `${fotos.length} ${fotos.length === 1 ? "foto" : "fotos"} · salen en la landing en este orden`}
+              : `${fotos.length} ${fotos.length === 1 ? "foto" : "fotos"} · las primeras ${EN_LA_PORTADA} se ven en la landing; las demás, al abrir la galería`}
           </p>
         </div>
 
@@ -97,9 +98,23 @@ export function AdminGaleria({ fotos }: { fotos: Foto[] }) {
       ) : (
         <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
           {fotos.map((f, i) => (
-            <div key={f.id} className="overflow-hidden rounded-[18px] border border-linea bg-papel">
-              {/* eslint-disable-next-line @next/next/no-img-element -- miniatura del panel */}
-              <img src={f.url} alt={f.descripcion ?? ""} className="h-40 w-full object-cover" />
+            <div
+              key={f.id}
+              className={`overflow-hidden rounded-[18px] bg-papel ${
+                i < EN_LA_PORTADA ? "border-2 border-azul" : "border border-linea"
+              }`}
+            >
+              <div className="relative">
+                {/* eslint-disable-next-line @next/next/no-img-element -- miniatura del panel */}
+                <img src={f.url} alt={f.descripcion ?? ""} className="h-40 w-full object-cover" />
+                {/* Que se vea de un vistazo cuáles son las que salen en la
+                    landing: es la pregunta que uno se hace al abrir esto. */}
+                {i < EN_LA_PORTADA && (
+                  <span className="caps absolute top-2 left-2 rounded-full bg-azul px-2.5 py-1 text-[9px] !text-papel">
+                    En la landing
+                  </span>
+                )}
+              </div>
 
               <div className="flex items-center justify-between gap-1 p-2">
                 <div className="flex gap-1">
@@ -120,6 +135,18 @@ export function AdminGaleria({ fotos }: { fotos: Foto[] }) {
                     className="h-11 w-11 rounded-full border border-linea-fuerte font-ui text-[13px] text-tinta-3 disabled:opacity-30"
                   >
                     →
+                  </button>
+                  {/* Con 47 fotos, llevar una al principio a punta de flechas
+                      serían 39 clics. Esto es un clic. */}
+                  <button
+                    type="button"
+                    disabled={i === 0 || pendiente}
+                    onClick={() => empezar(async () => void (await destacarFoto(f.id)))}
+                    aria-label="Poner esta foto de primera"
+                    title="Poner de primera"
+                    className="caps h-11 rounded-full border border-linea-fuerte px-3 text-[9px] text-tinta-3 disabled:opacity-30"
+                  >
+                    De primera
                   </button>
                 </div>
 

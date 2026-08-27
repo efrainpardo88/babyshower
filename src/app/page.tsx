@@ -202,16 +202,21 @@ function Icono({ tipo }: { tipo: string }) {
 
 export default async function Home() {
   // Si todavía no han subido fotos, se muestran los marcadores de color.
+  //
+  // SIN `limit`: había uno de 6 desde cuando la galería eran cuatro marcadores
+  // de color, y se quedó ahí. Erica subió 47 fotos y en la landing salían 6;
+  // parecía que la subida estaba fallando y no era eso. Cuántas se ven en la
+  // tira lo decide `Galeria`, que es quien sabe cómo se ven — aquí no.
   const galeria = await db
     .select({ url: fotosGaleria.url, descripcion: fotosGaleria.descripcion })
     .from(fotosGaleria)
-    .orderBy(asc(fotosGaleria.orden))
-    .limit(6);
+    .orderBy(asc(fotosGaleria.orden));
 
   const polaroids =
     galeria.length > 0
       ? galeria.map((f, i) => ({
           titulo: f.descripcion ?? "Benjamín",
+          pie: f.descripcion ?? undefined,
           rot: GIROS[i % GIROS.length],
           tinte: "",
           url: f.url,
