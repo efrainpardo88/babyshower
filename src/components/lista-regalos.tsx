@@ -19,7 +19,6 @@ import Link from "next/link";
 import { TarjetaRegalo } from "@/components/tarjeta-regalo";
 import { Corazon } from "@/components/ilustraciones";
 import { calcularEstado, sePuedeEscoger } from "@/lib/estado-regalo";
-import { formatearRangoCorto, sumarRangos } from "@/lib/precio";
 import type { CategoriaConCuenta, RegaloDeLista } from "@/lib/regalos";
 import { cambiarCantidad, escoger, quitar, useSeleccion } from "@/lib/seleccion";
 import { BotonAsistencia } from "@/components/boton-asistencia";
@@ -151,18 +150,6 @@ export function ListaRegalos({
     [seleccion, porSlug],
   );
 
-  // El rango de la selección multiplica por cantidad: dos paquetes de pañales
-  // cuestan el doble que uno.
-  const rango = useMemo(() => {
-    const items = escogidos.flatMap(({ regalo, cantidad }) =>
-      Array.from({ length: cantidad }, () => ({
-        precioMin: regalo.precioMin,
-        precioMax: regalo.precioMax,
-      })),
-    );
-    return sumarRangos(items);
-  }, [escogidos]);
-
   const cuantos = escogidos.length;
 
   return (
@@ -288,22 +275,6 @@ export function ListaRegalos({
                   />
                 ))}
               </ul>
-
-              {rango && (
-                <div className="mt-4 flex items-baseline justify-between gap-3 border-t border-linea pt-3">
-                  <span className="caps text-[10px]">Rango de la selección</span>
-                  <span className="font-ui text-[14px] font-bold text-tinta-2">
-                    {formatearRangoCorto({ precioMin: rango.min, precioMax: rango.max })}
-                  </span>
-                </div>
-              )}
-              {rango && rango.sinRango > 0 && (
-                <p className="mt-1.5 mb-0 font-ui text-[11px] text-tinta-5">
-                  {rango.sinRango === 1
-                    ? "Un regalo todavía no tiene precio cargado, así que el rango se queda corto."
-                    : `${rango.sinRango} regalos todavía no tienen precio cargado, así que el rango se queda corto.`}
-                </p>
-              )}
 
               <Link
                 href="/reserva"

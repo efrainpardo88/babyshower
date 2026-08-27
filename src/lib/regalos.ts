@@ -19,8 +19,6 @@ import type { RegaloTarjeta } from "@/components/tarjeta-regalo";
 export type RegaloDeLista = RegaloTarjeta & {
   /** Para filtrar por categoría sin depender del nombre visible. */
   categoriaSlug: string;
-  /** Talla o cantidad. Se muestra en el panel de selección. */
-  especificacion: string | null;
 };
 
 export type CategoriaConCuenta = {
@@ -40,10 +38,8 @@ export async function cargarLista(): Promise<Lista> {
       slug: regalos.slug,
       nombre: regalos.nombre,
       especificacion: regalos.especificacion,
+      notaPapas: regalos.notaPapas,
       imagenUrl: regalos.imagenUrl,
-      precioMin: regalos.precioMin,
-      precioMax: regalos.precioMax,
-      nivelPrecio: regalos.nivelPrecio,
       modo: regalos.modo,
       categoriaSlug: categorias.slug,
       categoriaNombre: categorias.nombre,
@@ -78,12 +74,10 @@ export async function cargarLista(): Promise<Lista> {
     slug: f.slug,
     nombre: f.nombre,
     especificacion: f.especificacion,
+    notaPapas: f.notaPapas,
     categoriaSlug: f.categoriaSlug,
     categoriaNombre: f.categoriaNombre,
     imagenUrl: f.imagenUrl,
-    precioMin: f.precioMin,
-    precioMax: f.precioMax,
-    nivelPrecio: f.nivelPrecio,
     modo: f.modo,
     reservas: porSlug.get(f.slug) ?? [],
   }));

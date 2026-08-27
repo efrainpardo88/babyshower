@@ -19,7 +19,6 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import { Corazon, Divisor } from "@/components/ilustraciones";
 import { limpiar, useSeleccion } from "@/lib/seleccion";
-import { formatearRangoCorto, sumarRangos } from "@/lib/precio";
 import type { RegaloDeLista } from "@/lib/regalos";
 import type { Resultado } from "@/lib/reservar";
 import { confirmarReserva } from "@/app/reserva/acciones";
@@ -74,16 +73,6 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
         .filter((x): x is { regalo: RegaloDeLista; cantidad: number } => Boolean(x.regalo)),
     [seleccion, porSlug],
   );
-
-  const rango = useMemo(() => {
-    const items = escogidos.flatMap(({ regalo, cantidad }) =>
-      Array.from({ length: cantidad }, () => ({
-        precioMin: regalo.precioMin,
-        precioMax: regalo.precioMax,
-      })),
-    );
-    return sumarRangos(items);
-  }, [escogidos]);
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -320,14 +309,7 @@ export function FormularioReserva({ regalos }: { regalos: RegaloDeLista[] }) {
             </li>
           ))}
         </ul>
-        {rango && (
-          <p className="mt-3 mb-0 flex items-baseline justify-between gap-3 border-t border-linea pt-3">
-            <span className="caps text-[10px]">Rango</span>
-            <span className="font-ui text-[13px] font-bold text-tinta-2">
-              {formatearRangoCorto({ precioMin: rango.min, precioMax: rango.max })}
-            </span>
-          </p>
-        )}
+
       </div>
 
       <form onSubmit={enviar} className="mt-5 flex flex-col gap-4">

@@ -11,6 +11,7 @@
  */
 
 import { useCallback, useEffect, useState, useTransition } from "react";
+import { formatearRangoCorto } from "@/lib/precio";
 import {
   alternarPublicado,
   borrarRegalo,
@@ -232,6 +233,13 @@ export function AdminRegalos({
                     {r.especificacion && (
                       <span className="block font-ui text-[11px] text-tinta-5">
                         {r.especificacion}
+                      </span>
+                    )}
+                    {/* El invitado ya no ve precios (27/08/2026), pero los papás
+                        siguen necesitando la referencia para cotizar. */}
+                    {formatearRangoCorto(r) && (
+                      <span className="block font-ui text-[11px] tabular-nums text-tinta-5">
+                        {formatearRangoCorto(r)}
                       </span>
                     )}
                   </td>

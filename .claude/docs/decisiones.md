@@ -16,26 +16,72 @@ tiene 19 días. **No integrar Wompi, Mercado Pago, PayU ni nada parecido.**
 
 ---
 
-### El invitado ve el rango real de precios
+### El invitado no ve precios
 
-**Revisado el 25 de agosto de 2026 — Efraín.** Antes era `$ · $$ · $$$` y nada más.
+**Decidido el 27 de agosto de 2026 — Erica.** Deshace la revisión del 25 de agosto,
+que a su vez había reemplazado el `$ · $ · $# Registro de decisiones
 
-La tarjeta, la ficha y el panel de selección muestran el rango en pesos:
-«Entre $20.000 y $80.000». `precioMin` y `precioMax` pasaron de privados a públicos.
+Por qué el proyecto es como es. **Léelo antes de "mejorar" algo** — varias de estas
+decisiones parecen limitaciones y son intencionales.
 
-*Por qué el cambio:* `$$` no le dice a nadie si un regalo cuesta 90 mil o 240 mil, y el
-invitado terminaba abriendo la ficha o preguntando por WhatsApp para saber en qué se estaba
-metiendo. El rango deja escoger por presupuesto sin tener que adivinar.
+---
 
-*Qué se conservó de la decisión original:* el rango orienta, no factura. Se muestra siempre
-como intervalo, nunca como precio exacto de un producto concreto, y no hay totales a pagar
-en ninguna parte — la página sigue sin manejar dinero.
+### La página no maneja dinero. Nunca.
 
-`nivelPrecio` (`$ · $$ · $$$`) no se borró: es el respaldo cuando un regalo todavía no tiene
-rango cargado, y sirve para agrupar en el panel. El corte sigue siendo
-`$` hasta 80.000 · `$$` hasta 250.000 · `$$$` de ahí para arriba (COP).
+En los regalos de grupo la página solo muestra quiénes se apuntaron y cómo contactarlos.
+El recaudo lo resuelven ellos por WhatsApp, Nequi, o como quieran.
 
-*Pendiente visual:* las pantallas aprobadas (`.claude/docs/diseno/*.png`) todavía dibujan `$ $$ $$$`
+*Por qué:* Efraín lo pidió explícitamente y está fuera de alcance. Una pasarela de pagos
+suma semanas, comisiones y responsabilidad legal sobre plata ajena, en un proyecto que
+tiene 19 días. **No integrar Wompi, Mercado Pago, PayU ni nada parecido.**
+
+---
+
+ original por el rango en pesos.
+
+Donde estaba el precio va ahora la **especificación** y la **nota de los papás**.
+Ningún precio sale hacia el invitado: ni en la tarjeta, ni en la ficha, ni como
+total del panel de selección.
+
+*Por qué:* poner cifras al lado de cada regalo convierte la lista en una vitrina y
+mete a los invitados en una comparación que nadie pidió — quién trajo lo caro y quién
+lo barato. La especificación («Talla 2», «Grupo 0+») y la nota («Solo dos, de verdad:
+esta talla se usa unas tres semanas») dicen lo que de verdad ayuda a escoger.
+
+*Qué se quitó de la página, no de la base:* `precioMin`, `precioMax` y `nivelPrecio`
+siguen en la tabla y se siguen editando desde `/admin/regalos`, donde la tabla muestra
+el rango debajo del nombre. Los papás necesitan la referencia para cotizar; el invitado no.
+
+*Y no solo se escondió:* `cargarLista()` dejó de seleccionar las tres columnas, así que
+las cifras ya no viajan en el HTML de `/lista`. Esconder con CSS habría dejado los números
+a un clic derecho de distancia.
+
+`src/lib/precio.ts` sigue vivo — lo usa el panel de admin — pero ninguna página pública
+lo importa. Si algún día vuelve el precio al invitado, se vuelve a llamar desde ahí.
+
+*Efecto de borde que hubo que arreglar:* como todas las tarjetas traían el renglón del
+precio, median casi lo mismo y los botones quedaban parejos. Con la nota, que unas tienen
+y otras no, la tarjeta necesitó `sm:flex-col` para que el `mt-auto` del botón funcione.
+
+*Pendiente visual:* las pantallas aprobadas (`.claude/docs/diseno/*.png`) dibujan `$ $ $# Registro de decisiones
+
+Por qué el proyecto es como es. **Léelo antes de "mejorar" algo** — varias de estas
+decisiones parecen limitaciones y son intencionales.
+
+---
+
+### La página no maneja dinero. Nunca.
+
+En los regalos de grupo la página solo muestra quiénes se apuntaron y cómo contactarlos.
+El recaudo lo resuelven ellos por WhatsApp, Nequi, o como quieran.
+
+*Por qué:* Efraín lo pidió explícitamente y está fuera de alcance. Una pasarela de pagos
+suma semanas, comisiones y responsabilidad legal sobre plata ajena, en un proyecto que
+tiene 19 días. **No integrar Wompi, Mercado Pago, PayU ni nada parecido.**
+
+---
+
+
 en la tarjeta. El código diverge del PNG **a propósito** en esa línea y solo en esa línea.
 
 ---

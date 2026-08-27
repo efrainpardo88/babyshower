@@ -383,12 +383,10 @@ export default async function Home() {
           <h2 className="caps relative z-10 m-0 text-[17px] text-tinta-2 sm:text-[clamp(21px,1.5vw,30px)]">
             Mesa de regalos
           </h2>
-          <p className="relative z-10 m-0 max-w-[38ch] text-[14px] leading-relaxed text-tinta-4 sm:text-[clamp(15px,1.07vw,21px)]">
-            Tu presencia es el mejor regalo,
-            <br />
-            pero si deseas tener un detalle con nosotros,
-            <br />
-            aquí tienes algunas opciones.
+          <p className="relative z-10 m-0 max-w-[52ch] text-[14px] leading-relaxed text-balance text-tinta-4 sm:text-[clamp(15px,1.07vw,21px)]">
+            Tu presencia es nuestro mejor regalo. Sin embargo, si deseas tener un detalle y no
+            sabes qué regalarle a Benjamín, aquí te dejamos algunas ideas que nos serán de gran
+            ayuda.
           </p>
           <Link
             href="/lista"
@@ -440,8 +438,9 @@ export default async function Home() {
             <h2 className="caps m-0 text-[16px] text-tinta-2 sm:text-[clamp(19px,1.36vw,27px)]">
               Confirma tu asistencia
             </h2>
-            <p className="m-0 text-[14px] text-tinta-4 sm:text-[clamp(15px,1.07vw,21px)]">
-              ¡Nos encantaría contar contigo!
+            <p className="m-0 max-w-[52ch] text-[14px] leading-relaxed text-balance text-tinta-4 sm:text-[clamp(15px,1.07vw,21px)]">
+              Para nosotros es muy importante contar con tu presencia y celebrar juntos la próxima
+              llegada de Benjamín. Por favor, confírmanos tu asistencia antes del 31 de agosto.
             </p>
             <a
               href={ENLACE_WHATSAPP}

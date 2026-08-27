@@ -22,17 +22,16 @@
  */
 
 import { calcularEstado, type EstadoRegalo, type RegaloParaEstado } from "@/lib/estado-regalo";
-import { formatearRango, type RangoPrecio } from "@/lib/precio";
-
-export type RegaloTarjeta = RegaloParaEstado &
-  RangoPrecio & {
-    slug: string;
-    nombre: string;
-    categoriaNombre: string;
-    imagenUrl: string | null;
-    /** Respaldo cuando el regalo todavía no tiene rango cargado. */
-    nivelPrecio: "$" | "$$" | "$$$";
-  };
+export type RegaloTarjeta = RegaloParaEstado & {
+  slug: string;
+  nombre: string;
+  categoriaNombre: string;
+  imagenUrl: string | null;
+  /** Talla o cantidad. Es LA defensa contra los regalos repetidos. */
+  especificacion: string | null;
+  /** Por qué lo pidieron. Ocupa el renglón donde estaba el precio. */
+  notaPapas: string | null;
+};
 
 type Props = {
   regalo: RegaloTarjeta;
@@ -140,19 +139,21 @@ export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar
   const paleta = PALETA[familiaDe(estado)];
   const reservado = estado.tipo === "reservado";
 
-  // El rango real reemplaza al glifo del PNG. Sin rango cargado, cae a nivelPrecio.
-  const rango = formatearRango(regalo);
-
   return (
     <article
-      className={`flex gap-4 overflow-hidden rounded-[20px] bg-papel p-3 text-left transition sm:block sm:p-0 ${
+      /* `sm:flex sm:flex-col` no es cosmético: sin él la columna de contenido no
+         se estira y el `mt-auto` del botón no tiene contra qué empujar. Antes no
+         se notaba porque todas las tarjetas traían el renglón del precio y median
+         casi lo mismo; con la nota de los papás, que unas tienen y otras no, los
+         botones quedaban a distinta altura dentro de la misma fila. */
+      className={`flex gap-4 overflow-hidden rounded-[20px] bg-papel p-3 text-left transition sm:flex-col sm:p-0 ${
         enSeleccion
           ? "border-2 border-azul shadow-[0_4px_18px_-8px_rgba(79,110,133,.5)]"
           : "border border-linea shadow-[0_3px_14px_-10px_rgba(90,74,51,.5)]"
       } ${reservado ? "opacity-80" : ""}`}
     >
       {/* Foto: a la izquierda en móvil, arriba desde sm — ver ListaMovil.png */}
-      <div className="relative h-[125px] w-[86px] shrink-0 overflow-hidden rounded-xl sm:h-[130px] sm:w-full sm:rounded-none">
+      <div className="relative h-[125px] w-[86px] shrink-0 overflow-hidden rounded-xl sm:h-[300px] sm:w-full sm:rounded-none">
         <Foto tinte={paleta.foto} imagenUrl={regalo.imagenUrl} nombre={regalo.nombre} />
         {enSeleccion && (
           <span className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-azul text-papel">
@@ -177,15 +178,17 @@ export function TarjetaRegalo({ regalo, enSeleccion = false, onEscoger, onQuitar
 
         <h3 className="font-serif text-[19px] leading-tight font-bold text-tinta">{regalo.nombre}</h3>
 
-        {/* El renglón del precio: rango real, no glifo. */}
-        <p className="font-ui text-[13px] text-tinta-4">
-          {rango ?? (
-            <>
-              <span aria-hidden="true">{regalo.nivelPrecio}</span>
-              <span className="sr-only">Precio por confirmar</span>
-            </>
-          )}
-        </p>
+        {/* Donde iba el precio (quitado el 27/08/2026): qué es exactamente y por
+            qué lo pidieron. Las dos son opcionales — la mayoría de regalos no
+            tiene nota — así que la tarjeta se encoge sola cuando faltan. */}
+        {regalo.especificacion && (
+          <p className="font-ui text-[13px] text-tinta-4">{regalo.especificacion}</p>
+        )}
+        {regalo.notaPapas && (
+          <p className="line-clamp-3 font-ui text-[12px] leading-snug text-tinta-5 italic">
+            {regalo.notaPapas}
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
           <span
