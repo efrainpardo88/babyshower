@@ -16,6 +16,9 @@ import ln4l from "../../public/img/ln-4-l.png";
 import ln4r from "../../public/img/ln-4-r.png";
 import { Corazon, Divisor } from "@/components/ilustraciones";
 import { CuentaRegresiva } from "@/components/cuenta-regresiva";
+import { asc } from "drizzle-orm";
+import { db } from "@/lib/db";
+import { fotosGaleria } from "@/lib/db/schema";
 import { BotonAsistencia } from "@/components/boton-asistencia";
 import { ENLACE_WHATSAPP } from "@/lib/whatsapp";
 
@@ -57,13 +60,19 @@ const DATOS = [
   { icono: "lugar", etiqueta: "Salón Social", valor: "Urb. Puerto Ventura\nCr 57 #38-220" },
 ] as const;
 
-/** Cuatro polaroids, no seis. Los tintes son marcadores hasta que lleguen las fotos. */
-const FOTOS = [
-  { titulo: "Revelación de género", rot: "-rotate-3", tinte: "bg-[#EDE0CB]" },
-  { titulo: "Humo azul", rot: "rotate-2", tinte: "bg-[#DFE7EC]" },
-  { titulo: "Nosotros dos", rot: "-rotate-2", tinte: "bg-[#E7EADF]" },
-  { titulo: "La torta", rot: "rotate-3", tinte: "bg-[#F0E4D2]" },
+/**
+ * Marcadores de color: solo se usan mientras no haya fotos cargadas desde el
+ * panel. En cuanto se sube la primera, la galería sale de `fotos_galeria`.
+ */
+const MARCADORES = [
+  { titulo: "Revelación de género", tinte: "bg-[#EDE0CB]" },
+  { titulo: "Humo azul", tinte: "bg-[#DFE7EC]" },
+  { titulo: "Nosotros dos", tinte: "bg-[#E7EADF]" },
+  { titulo: "La torta", tinte: "bg-[#F0E4D2]" },
 ] as const;
+
+/** La inclinación de cada polaroid, para que no se vean alineadas a escuadra. */
+const GIROS = ["-rotate-3", "rotate-2", "-rotate-2", "rotate-3", "rotate-1", "-rotate-1"] as const;
 
 /* ------------------------------------------------------------------ */
 
@@ -187,14 +196,29 @@ function Icono({ tipo }: { tipo: string }) {
   );
 }
 
-function Polaroid({ titulo, rot, tinte }: { titulo: string; rot: string; tinte: string }) {
+function Polaroid({
+  titulo,
+  rot,
+  tinte,
+  url,
+}: {
+  titulo: string;
+  rot: string;
+  tinte: string;
+  url?: string;
+}) {
   return (
     <figure
       className={`${rot} -ml-2 rounded-sm bg-papel p-2 pb-6 shadow-[0_6px_20px_-10px_rgba(90,74,51,.45)] first:ml-0`}
     >
       <div
-        className={`${tinte} flex h-[112px] w-[92px] flex-col items-center justify-center gap-1.5 text-tinta/30 sm:h-[clamp(164px,11.7vw,220px)] sm:w-[clamp(136px,9.7vw,182px)]`}
+        className={`${url ? "" : tinte} flex h-[112px] w-[92px] flex-col items-center justify-center gap-1.5 overflow-hidden text-tinta/30 sm:h-[clamp(164px,11.7vw,220px)] sm:w-[clamp(136px,9.7vw,182px)]`}
       >
+        {url ? (
+          // eslint-disable-next-line @next/next/no-img-element -- la URL viene de la base, no del build
+          <img src={url} alt={titulo} className="h-full w-full object-cover" />
+        ) : (
+          <>
         <svg
           viewBox="0 0 24 24"
           className="h-6 w-6"
@@ -209,9 +233,11 @@ function Polaroid({ titulo, rot, tinte }: { titulo: string; rot: string; tinte: 
           <circle cx="8.5" cy="10" r="1.8" />
           <path d="m4 17 4.5-4.5 3.5 3.5 3-3L20 17" />
         </svg>
-        <figcaption className="px-2 text-center font-ui text-[8px] font-bold tracking-[.12em] uppercase">
-          {titulo}
-        </figcaption>
+            <figcaption className="px-2 text-center font-ui text-[8px] font-bold tracking-[.12em] uppercase">
+              {titulo}
+            </figcaption>
+          </>
+        )}
       </div>
     </figure>
   );
@@ -219,7 +245,24 @@ function Polaroid({ titulo, rot, tinte }: { titulo: string; rot: string; tinte: 
 
 /* ------------------------------------------------------------------ */
 
-export default function Home() {
+export default async function Home() {
+  // Si todavía no han subido fotos, se muestran los marcadores de color.
+  const galeria = await db
+    .select({ url: fotosGaleria.url, descripcion: fotosGaleria.descripcion })
+    .from(fotosGaleria)
+    .orderBy(asc(fotosGaleria.orden))
+    .limit(6);
+
+  const polaroids =
+    galeria.length > 0
+      ? galeria.map((f, i) => ({
+          titulo: f.descripcion ?? "Benjamín",
+          rot: GIROS[i % GIROS.length],
+          tinte: "",
+          url: f.url,
+        }))
+      : MARCADORES.map((m, i) => ({ ...m, rot: GIROS[i % GIROS.length], url: undefined }));
+
   return (
     <main className="relative overflow-hidden">
       {/* ---------------- NAV ---------------- */}
@@ -383,8 +426,8 @@ export default function Home() {
               </h2>
             </div>
             <div className="mt-5 flex flex-wrap items-center justify-center pl-2 lg:justify-start">
-              {FOTOS.map((f) => (
-                <Polaroid key={f.titulo} {...f} />
+              {polaroids.map((f, i) => (
+                <Polaroid key={`${f.titulo}-${i}`} {...f} />
               ))}
             </div>
           </div>

@@ -122,6 +122,32 @@ SVG se borra en `.claude/docs/diseno/remove-svg.png`. Ambos explicados en `.clau
 - Auth.js v5 con Google, restringido por lista blanca (`ADMIN_EMAILS`)
 - Vercel para desplegar. Subdominio `.vercel.app` al lanzar; dominio propio se puede agregar después.
 
+### Imágenes
+
+Hay dos clases de imagen y viven en sitios distintos **a propósito**:
+
+| | Dónde | Quién la pone |
+|---|---|---|
+| Acuarelas de la landing | `public/img`, commiteadas al repo | Efraín, con git |
+| Fotos de regalos y galería | **Vercel Blob** | Cualquiera, desde el panel |
+
+**Por qué no todo en `public/`:** el sistema de archivos de Vercel es de SOLO
+LECTURA en ejecución, y cada despliegue crea un entorno nuevo. Una foto subida
+desde el panel a `public/` desaparecería al siguiente push. Las acuarelas sí
+pueden ir ahí porque las pone git, no la aplicación.
+
+**Todo el trato con el almacenamiento vive en `src/lib/imagenes.ts`.** Si algún
+día se cambia de proveedor, se cambia ese archivo y nada más.
+
+**Se redimensionan al subir**: 1200px de ancho y WebP. No es un lujo — una foto
+de celular son 3–4 MB y en la tarjeta se ve a 300px. En la prueba, 221 KB
+pasaron a 42 KB. Sin esto la lista arrancaría lentísima en datos móviles, que es
+como la van a abrir casi todos los invitados.
+
+La galería de la landing sale de la tabla `fotos_galeria`. Si está vacía, se
+muestran marcadores de color; en cuanto se sube la primera foto, se publican
+las reales sin tocar código ni desplegar.
+
 ## Rutas
 
 | Ruta | Acceso | Qué hace |
@@ -180,7 +206,8 @@ Cada una de estas fue una decisión, no un olvido. Ver `.claude/docs/decisiones.
 - [ ] `/regalo/[slug]`
 - [x] Auth con Google, lista blanca por `ADMIN_EMAILS` y middleware sobre `/admin/*`
 - [x] `/admin` (resumen), `/admin/regalos` (CRUD) y `/admin/reservas` (tabla + CSV)
-- [ ] `/admin/galeria` y `/admin/ajustes`
+- [x] `/admin/galeria` y subida de imágenes a Vercel Blob
+- [ ] `/admin/ajustes`
 - [x] Base en Neon viva: proyecto `frosty-haze-68776446`, rama `production`, base `babyshower`
 - [x] Los 26 regalos cargados con `db:seed` (idempotente: se puede repetir)
 - [x] Acuarelas de la landing conectadas; SVG viejos eliminados

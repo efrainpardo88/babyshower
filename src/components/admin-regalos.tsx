@@ -18,6 +18,7 @@ import {
   guardarRegalo,
   type DatosRegalo,
 } from "@/app/admin/(panel)/regalos/acciones";
+import { subirImagenDeRegalo } from "@/app/admin/(panel)/regalos/subir";
 
 export type RegaloAdmin = {
   id: string;
@@ -93,7 +94,23 @@ export function AdminRegalos({
   const [creando, setCreando] = useState(false);
   const [form, setForm] = useState<DatosRegalo>(VACIO);
   const [aviso, setAviso] = useState<string | null>(null);
+  const [subiendo, setSubiendo] = useState(false);
   const [pendiente, empezar] = useTransition();
+
+  /**
+   * La imagen se sube en cuanto se elige, no al guardar. Así se ve la vista
+   * previa de inmediato y, si la foto está mal, se cambia antes de guardar.
+   */
+  async function subirArchivo(archivo: File) {
+    setAviso(null);
+    setSubiendo(true);
+    const datos = new FormData();
+    datos.set("archivo", archivo);
+    const r = await subirImagenDeRegalo(datos);
+    setSubiendo(false);
+    if (r.ok) cambiar("imagenUrl", r.url);
+    else setAviso(r.mensaje);
+  }
 
   const abierto = creando || editando !== null;
   const publicados = regalos.filter((r) => r.publicado).length;
@@ -347,17 +364,64 @@ export function AdminRegalos({
                 </div>
               </div>
 
-              <label className="block">
-                <span className="font-ui text-[12px] font-bold text-tinta-2">
-                  Foto <span className="font-normal text-tinta-5">— ruta o URL</span>
-                </span>
+              <div>
+                <span className="font-ui text-[12px] font-bold text-tinta-2">Foto</span>
+
+                <div className="mt-1.5 flex items-start gap-3">
+                  {/* Vista previa. Va con <img> y no con next/image porque la URL
+                      cambia sobre la marcha al subir otra. */}
+                  <span className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-linea-fuerte bg-crema">
+                    {form.imagenUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element -- vista previa dinámica
+                      <img src={form.imagenUrl} alt="" className="h-full w-full object-cover" />
+                    ) : (
+                      <span className="caps text-[8px] text-tinta-6">Sin foto</span>
+                    )}
+                  </span>
+
+                  <div className="min-w-0 flex-1">
+                    <label
+                      className={`caps flex h-11 cursor-pointer items-center justify-center rounded-full border-[1.5px] border-azul bg-papel px-4 text-[10px] font-bold text-azul transition hover:bg-azul-50 ${
+                        subiendo ? "pointer-events-none opacity-60" : ""
+                      }`}
+                    >
+                      {subiendo ? "Subiendo…" : form.imagenUrl ? "Cambiar foto" : "Subir foto"}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) => {
+                          const a = e.target.files?.[0];
+                          // Se limpia el input para poder volver a elegir la
+                          // misma foto si la primera vez falló.
+                          e.target.value = "";
+                          if (a) void subirArchivo(a);
+                        }}
+                      />
+                    </label>
+
+                    {form.imagenUrl && (
+                      <button
+                        type="button"
+                        onClick={() => cambiar("imagenUrl", "")}
+                        className="caps mt-1.5 h-8 w-full rounded-full text-[9px] text-gris-texto hover:text-pardo"
+                      >
+                        Quitar la foto
+                      </button>
+                    )}
+                  </div>
+                </div>
+
                 <input
                   value={form.imagenUrl}
                   onChange={(e) => cambiar("imagenUrl", e.target.value)}
-                  placeholder="/img/regalos/banera.webp"
-                  className={`${ENTRADA} mt-1`}
+                  placeholder="…o pega una URL"
+                  className={`${ENTRADA} mt-2 text-[11px]`}
                 />
-              </label>
+                <span className="mt-1 block font-ui text-[10px] leading-relaxed text-tinta-5">
+                  Se redimensiona a 1200px y se convierte a WebP al subirla.
+                </span>
+              </div>
 
               <label className="block">
                 <span className="font-ui text-[12px] font-bold text-tinta-2">

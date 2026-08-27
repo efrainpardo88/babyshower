@@ -14,13 +14,15 @@
     "prueba:correo": "tsx --env-file=.env.local scripts/prueba-correo.ts"
   },
   "dependencies": {
+    "@vercel/blob": "^2.8.0",
     "drizzle-orm": "^0.45.2",
     "next": "16.3.2",
     "next-auth": "^5.0.0-beta.32",
     "nodemailer": "^8.0.11",
     "postgres": "^3.4.9",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sharp": "^0.35.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
