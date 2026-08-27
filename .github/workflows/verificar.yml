@@ -38,7 +38,12 @@ jobs:
           node-version: 22
           cache: npm
 
-      - run: npm ci
+      # `npm install` y no `npm ci`: el lock lista la variante wasm32 de sharp
+      # pero no sus dependencias, porque npm en Windows no las resuelve —esa
+      # variante no aplica ahí— y `npm ci` rechaza un lock incoherente aunque
+      # corra en Linux. Se pierde algo de reproducibilidad a cambio de que la
+      # verificación funcione; el build de Vercel hace lo mismo.
+      - run: npm install --no-audit --no-fund
 
       - name: Tipos
         run: npx tsc --noEmit
