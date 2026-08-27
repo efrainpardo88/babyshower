@@ -45,6 +45,12 @@ jobs:
       # verificación funcione; el build de Vercel hace lo mismo.
       - run: npm install --no-audit --no-fund
 
+      # `next-env.d.ts` lo genera Next y está en .gitignore, así que en un clon
+      # limpio no existe y `tsc` no sabe qué tipo tiene un import de .png.
+      # `typegen` lo crea sin hacer el build completo.
+      - name: Generar tipos de Next
+        run: npx next typegen
+
       - name: Tipos
         run: npx tsc --noEmit
 
