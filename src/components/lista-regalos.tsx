@@ -207,7 +207,7 @@ export function ListaRegalos({
               onClick={() => setPanelAbierto((v) => !v)}
               className="caps flex h-12 items-center gap-2 rounded-full border border-azul-200 bg-azul-50 px-4 text-[11px] !text-azul lg:hidden"
             >
-              Mi selección · {cuantos}
+              Confirmar · {cuantos}
             </button>
           </div>
         </div>
@@ -272,7 +272,7 @@ export function ListaRegalos({
           /**
            * En móvil se abre COMO CAPA, anclada abajo. Antes era un bloque más
            * al final de la grilla: con 35 regalos quedaba en el píxel 8022 de
-           * una página de 8316, así que tocar «Revisar» no movía nada y el
+           * una página de 8316, así que tocar el botón no movía nada y el
            * invitado creía que la página estaba rota. Varios reportaron que no
            * los dejaba reservar; era esto.
            *
@@ -348,7 +348,7 @@ export function ListaRegalos({
       </div>
 
       {/* Se sube cuando aparece la barra de selección en móvil, o quedaría
-          justo encima de «Revisar». */}
+          justo encima de «Confirmar». */}
       {!panelAbierto && (
         <BotonAsistencia
           clase={`right-5 sm:right-7 ${cuantos > 0 ? "bottom-24 lg:bottom-7" : "bottom-5 sm:bottom-7"}`}
@@ -363,14 +363,14 @@ export function ListaRegalos({
               <p className="m-0 font-serif text-[15px] font-bold text-tinta">
                 {cuantos} {cuantos === 1 ? "regalo escogido" : "regalos escogidos"}
               </p>
-              <p className="m-0 font-ui text-[11px] text-tinta-5">Toca para revisarlos</p>
+              <p className="m-0 font-ui text-[11px] text-tinta-5">Toca para revisar y confirmar</p>
             </div>
             <button
               type="button"
               onClick={() => setPanelAbierto(true)}
               className="caps h-12 shrink-0 rounded-full bg-azul px-6 text-[12px] font-bold !text-papel"
             >
-              Revisar
+              Confirmar
             </button>
           </div>
         </div>
