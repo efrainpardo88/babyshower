@@ -14,7 +14,7 @@
  * «Reservado»: es el que evita que alguien crea que ya reservó y se vaya.
  */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { TarjetaRegalo } from "@/components/tarjeta-regalo";
 import { Corazon } from "@/components/ilustraciones";
@@ -22,6 +22,7 @@ import { calcularEstado, sePuedeEscoger } from "@/lib/estado-regalo";
 import type { CategoriaConCuenta, RegaloDeLista } from "@/lib/regalos";
 import { cambiarCantidad, escoger, quitar, useSeleccion } from "@/lib/seleccion";
 import { BotonAsistencia } from "@/components/boton-asistencia";
+import { useScrollBloqueado } from "@/lib/bloquear-scroll";
 
 /* ------------------------------------------------------------------ */
 
@@ -129,6 +130,18 @@ export function ListaRegalos({
   const [categoria, setCategoria] = useState<string | null>(null);
   const [soloDisponible, setSoloDisponible] = useState(false);
   const [panelAbierto, setPanelAbierto] = useState(false);
+
+  /* Como capa que es, en móvil: la grilla de atrás no se desplaza y Escape sale. */
+  useScrollBloqueado(panelAbierto, "(max-width: 1023px)");
+
+  useEffect(() => {
+    if (!panelAbierto) return;
+    const alTecla = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPanelAbierto(false);
+    };
+    window.addEventListener("keydown", alTecla);
+    return () => window.removeEventListener("keydown", alTecla);
+  }, [panelAbierto]);
 
   const porSlug = useMemo(() => new Map(regalos.map((r) => [r.slug, r])), [regalos]);
 
@@ -242,16 +255,51 @@ export function ListaRegalos({
         </div>
 
         {/* ---------------- PANEL DE SELECCIÓN ---------------- */}
+        {/* Fondo que cierra al tocarlo. Solo en móvil: en escritorio el panel
+            convive con la grilla, no la tapa. */}
+        {panelAbierto && (
+          <button
+            type="button"
+            aria-label="Cerrar mi selección"
+            onClick={() => setPanelAbierto(false)}
+            className="fixed inset-0 z-40 bg-tinta/30 lg:hidden"
+          />
+        )}
         <aside
+          role={panelAbierto ? "dialog" : undefined}
+          aria-modal={panelAbierto ? true : undefined}
+          aria-label="Mi selección"
+          /**
+           * En móvil se abre COMO CAPA, anclada abajo. Antes era un bloque más
+           * al final de la grilla: con 35 regalos quedaba en el píxel 8022 de
+           * una página de 8316, así que tocar «Revisar» no movía nada y el
+           * invitado creía que la página estaba rota. Varios reportaron que no
+           * los dejaba reservar; era esto.
+           *
+           * El hueco de arriba no es decorativo: es lo único que se puede tocar
+           * para cerrar sin buscar un botón.
+           */
           className={`${
-            panelAbierto ? "block" : "hidden"
-          } rounded-[22px] border border-linea bg-papel p-5 lg:sticky lg:top-[132px] lg:block`}
+            panelAbierto
+              ? "fixed inset-x-3 top-16 bottom-3 z-50 overflow-y-auto shadow-[0_12px_40px_-12px_rgba(90,74,51,.55)]"
+              : "hidden"
+          } rounded-[22px] border border-linea bg-papel p-5 lg:static lg:z-auto lg:block lg:overflow-visible lg:shadow-none lg:sticky lg:top-[132px]`}
         >
           <div className="flex items-center justify-between gap-3">
             <h2 className="m-0 font-serif text-[20px] font-bold text-tinta">Mi selección</h2>
-            <span className="caps rounded-full bg-azul-50 px-3 py-1.5 text-[10px] !text-azul">
-              {cuantos} {cuantos === 1 ? "regalo" : "regalos"}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="caps rounded-full bg-azul-50 px-3 py-1.5 text-[10px] !text-azul">
+                {cuantos} {cuantos === 1 ? "regalo" : "regalos"}
+              </span>
+              <button
+                type="button"
+                onClick={() => setPanelAbierto(false)}
+                aria-label="Cerrar mi selección"
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-linea-fuerte text-[15px] text-tinta-4 lg:hidden"
+              >
+                ×
+              </button>
+            </div>
           </div>
 
           <p className="mt-2 mb-0 font-ui text-[12px] leading-relaxed text-tinta-5">
@@ -285,6 +333,15 @@ export function ListaRegalos({
               <p className="mt-2 mb-0 text-center font-ui text-[11px] text-tinta-5">
                 Solo te pedimos nombre y correo.
               </p>
+              {/* La salida de vuelta a la lista, para seguir sumando regalos
+                  sin tener que adivinar cómo se cierra esto. */}
+              <button
+                type="button"
+                onClick={() => setPanelAbierto(false)}
+                className="caps mt-3 flex h-12 w-full items-center justify-center rounded-full border-[1.5px] border-azul bg-papel text-[11px] font-bold text-azul lg:hidden"
+              >
+                Seguir escogiendo
+              </button>
             </>
           )}
         </aside>
@@ -292,9 +349,11 @@ export function ListaRegalos({
 
       {/* Se sube cuando aparece la barra de selección en móvil, o quedaría
           justo encima de «Revisar». */}
-      <BotonAsistencia
-        clase={`right-5 sm:right-7 ${cuantos > 0 ? "bottom-24 lg:bottom-7" : "bottom-5 sm:bottom-7"}`}
-      />
+      {!panelAbierto && (
+        <BotonAsistencia
+          clase={`right-5 sm:right-7 ${cuantos > 0 ? "bottom-24 lg:bottom-7" : "bottom-5 sm:bottom-7"}`}
+        />
+      )}
 
       {/* ---------------- BARRA FIJA EN MÓVIL ---------------- */}
       {cuantos > 0 && !panelAbierto && (
