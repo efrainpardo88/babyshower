@@ -161,6 +161,38 @@ El invitado acumula regalos en un panel lateral (`localStorage`) y al final llen
 
 ---
 
+### El panel borra de verdad; el invitado solo cancela
+
+**Decidido el 30 de agosto de 2026 — Efraín.**
+
+En `/admin/reservas` cada fila tiene **Reenviar** y **Eliminar**. Son dos acciones que
+existen solo en el panel, y cada una se comporta distinto de lo que hace el invitado:
+
+**Eliminar borra la fila** (`DELETE`), mientras que cancelar desde el comprobante la deja
+en `estado = 'cancelada'`. No es una incoherencia: son dos casos distintos. Cuando el
+invitado cancela, interesa el rastro de quién había reservado qué. Cuando los papás
+borran, es porque la fila **sobra** — la prueba que hicimos nosotros, el duplicado, lo que
+alguien pidió por WhatsApp que quitáramos — y dejarla como «cancelada» solo ensucia la
+tabla y el CSV. Como el índice parcial solo cuenta las activas, borrar una reserva de un
+regalo `unico` lo devuelve a la lista. **No hay deshacer**, por eso pide confirmación.
+
+**Reenviar manda el correo del lote entero**, no el del regalo de esa fila. El invitado
+recibió UN correo con toda su selección y UN enlace; reenviarle solo la bañera le llegaría
+cojo. Se rearma el mismo correo del primer día con los regalos que sigan activos.
+
+**El destinatario se puede cambiar, y por defecto también se guarda.** El motivo número
+uno para reenviar es que el correo estaba mal escrito. Si solo se cambiara el destino de
+ese envío, la dirección mala seguiría en la base, en el CSV y en el siguiente reenvío — y
+no hay otro sitio en el panel donde arreglarla. Se actualizan todas las filas del lote,
+porque el contacto es del envío y no de cada regalo. La casilla solo aparece cuando el
+correo cambió: con el correo intacto no decide nada.
+
+*Lo que NO cambió:* el correo sigue sin poder tumbar nada. `enviarCorreoDeReserva`
+devuelve un booleano en vez de lanzar, y si el envío falla el cambio de dirección ya quedó
+guardado — se guarda antes de enviar, justo para que el reintento salga con la buena.
+
+---
+
 ### El oso pardo es la marca
 
 «Pardo» es el apellido de la familia. El oso no es decoración genérica de baby shower:
