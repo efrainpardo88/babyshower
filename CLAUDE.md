@@ -181,7 +181,7 @@ etiqueta — nunca desaparece.
 | `/reserva/[token]` | Pública con token | Comprobante; cancelar o cambiar |
 | `/admin` | Google + lista blanca | Resumen |
 | `/admin/regalos` | Privada | CRUD, modo, cupos, fotos |
-| `/admin/reservas` | Privada | Quién reservó qué, exportar CSV |
+| `/admin/reservas` | Privada | Quién reservó qué, exportar CSV, reenviar el correo y eliminar |
 | `/admin/galeria` | Privada | Fotos de la revelación |
 | `/admin/ajustes` | Privada | Textos, fechas, correos admin |
 
@@ -373,7 +373,7 @@ las reales sin tocar código ni desplegar.
 | `/reserva/[token]` | Pública con token | Comprobante; cancelar o cambiar |
 | `/admin` | Google + lista blanca | Resumen |
 | `/admin/regalos` | Privada | CRUD, modo, cupos, fotos |
-| `/admin/reservas` | Privada | Quién reservó qué, exportar CSV |
+| `/admin/reservas` | Privada | Quién reservó qué, exportar CSV, reenviar el correo y eliminar |
 | `/admin/galeria` | Privada | Fotos de la revelación |
 | `/admin/ajustes` | Privada | Textos, fechas, correos admin |
 
